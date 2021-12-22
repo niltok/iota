@@ -12,13 +12,12 @@ hljs.registerLanguage('idris', function(hljs) {
     }
 })
 
-if (fs.existsSync("docs")) fs.rmSync("docs", {
-    recursive: true
-})
-
-fs.mkdirSync("docs")
-
 const config = JSON.parse(fs.readFileSync('config.json').toString())
+
+if (fs.existsSync("docs")) fs.readdirSync("docs").forEach(f => {
+    if (f.endsWith('.html')) fs.rmSync('docs/' + f)
+})
+else fs.mkdirSync("docs")
 
 const $$ = label => s => '<' + label + '>\n' + s + '</' + label + '>\n'
 
