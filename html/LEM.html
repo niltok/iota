@@ -1,0 +1,84 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+<title>
+直觉主义逻辑中的排中律</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style>
+body { max-width: 650px; margin: auto; width: 90%; margin-top: 10%; margin-bottom: 10%; color: #0B0E26; background: #FAFAFC; line-height: 2em; font-variant-ligatures: common-ligatures discretionary-ligatures; -webkit-font-feature-settings: "liga" on, "calt" on; font-feature-settings: "liga" on, "calt" on; }
+body { font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif; }
+h1 { font-size: 2.5em; color: #EF96AB; line-height: 1.5em; }
+h2 { margin-top: 2em; line-height: 1.5em; }
+blockquote { color: gray; margin: 0; padding: 1 1 1 20; border-left: 5px solid #EF96AB; }
+code, pre { font-family: "JetBrains Mono","等距更纱黑体 SC","Fira Code",Menlo,Monaco,source-code-pro,Courier New,Consolas,monospace; background: #FCF6FC; border-radius: 3px; padding-inline: 0.3rem; }
+pre { overflow-x: auto; padding: 1rem; }
+pre>code { padding-inline: 0; }
+a { color: #02AEF1; text-decoration: none; }
+@media (prefers-color-scheme: dark) { body { color: #D8D8D6; background: #0E0E10; } }
+@media (prefers-color-scheme: dark) { pre, code { color: #D8D8D6; background: #0E0F1F; } }
+.hljs-keyword { color: #F288AF; }
+.hljs-comment { color: #929CA6; }
+.hljs-string { color: #0594A6; }
+.hljs-title { color: #4581D9; }
+.hljs-type, .hljs-built_in { color: #fca311; }
+</style>
+</head>
+<body>
+<p>
+<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="直觉主义逻辑中的排中律">直觉主义逻辑中的排中律</h1>
+<h3 id="by-「玩火」">By 「玩火」</h3>
+<blockquote>
+<p>前言：</p>
+<p>这篇记录是和 Trebor 大佬的聊天过程中得到的一些灵感，主要是关于直觉主义逻辑，经典逻辑，排中律的相关思考，还有一点对 Trebor 大佬写的 Chu Construction 的解读。又因为本人才学疏浅，完全不懂范畴论和哲学，所以解读都是瞎解的，希望读者不要信以为真。</p>
+<p>代码都是 Idris 语言</p>
+</blockquote>
+<h2 id="你接受排中律吗？">你接受排中律吗？</h2>
+<p>众所周知，在直觉主义逻辑中 <code>lem : Either p (p -&gt; Void)</code> 是没法证明的，这个类型所描述的定理在经典逻辑中是排中律，也就是经典逻辑的三大公理之一。这是直觉主义者会不接受排中律的理由。</p>
+<p>某天我想在一个数学群玩一下这个梗，然后改群名片为「拒绝排中律从我做起」。很快就有人问为啥拒绝排中律，我当时说「因为排中律无法归纳构造」。这时候 Trebor 提醒我这样说不是很对，并给我扔了一篇纸（然而我并没有去看）。</p>
+<h2 id="如果接受排中律">如果接受排中律</h2>
+<p>这时候我就忽然想起了夏天在复习离散数学的时候做的一些直觉主义证明练习，当时有个命题证明不出来，于是我就去问 Trebor 如果加上双重否定消去（排中律在直觉主义逻辑中成立的前提）它是否能证明。</p>
+<p>原命题是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">¬</mi><mi mathvariant="normal">∃</mi><mi>a</mi><mi mathvariant="normal">.</mi><mi mathvariant="normal">¬</mi><mi>p</mi><mo stretchy="false">(</mo><mi>a</mi><mo stretchy="false">)</mo><mo>⇒</mo><mi mathvariant="normal">∀</mi><mi>a</mi><mi mathvariant="normal">.</mi><mi>p</mi><mo stretchy="false">(</mo><mi>a</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\neg \exists {a}. \neg p(a) \Rightarrow \forall {a}. p(a)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">¬∃</span><span class="mord"><span class="mord mathnormal">a</span></span><span class="mord">.¬</span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⇒</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∀</span><span class="mord"><span class="mord mathnormal">a</span></span><span class="mord">.</span><span class="mord mathnormal">p</span><span class="mopen">(</span><span class="mord mathnormal">a</span><span class="mclose">)</span></span></span></span></p>
+<p>Trebor 指出应当先证明它的逆否命题，然后就可以得到它你否命题的逆否命题，然后把双重否定消掉就好了：</p>
+<pre><code class="language-idris">proof0 : (((a : t) -&gt; p a) -&gt; Void) -&gt; (((a : t ** p a -&gt; Void) -&gt; Void) -&gt; Void)
+proof0 f g = g (\(a ** npa) =&gt; f (\pa =&gt; npa (pa a)))
+
+proof1 : ((a : t ** p a -&gt; Void) -&gt; Void) -&gt; ((a : t) -&gt; p a)
+proof1 f = elimDoubleNeg ((contr proof0) (introDoubleNeg f))
+</code></pre>
+<p>更一般的说，根具<a href="https://ncatlab.org/nlab/show/double+negation+translation">哥德尔双重否定翻译</a>可知任何经典逻辑命题加上双重否定后在直觉主义逻辑中都能被证明。比如上面这个命题：</p>
+<pre><code class="language-idris">proof2 : ((((a : t ** p a -&gt; Void) -&gt; Void) -&gt; ((a : t) -&gt; p a)) -&gt; Void) -&gt; Void
+proof2 f = nnlem {p a} (\ lem =&gt; <span class="hljs-keyword">case</span> lem <span class="hljs-keyword">of</span> 
+    Left pa =&gt; f (\ _ _ =&gt; pa)
+    Right npa =&gt; f (\ g a =&gt; void (g (a ** npa))))
+</code></pre>
+<p>也就是说，经典逻辑实际上是直觉主义逻辑的子集。而且在上面这个例子中可以看到，加了双重否定以后就有办法利用排中律的双重否定可构造这个性质将排中律在局部引入。</p>
+<h2 id="直觉主义逻辑的世界">直觉主义逻辑的世界</h2>
+<p>这么看来，直觉主义逻辑并不是完全不接受排中律，只是无法显式构造，因为我们确实并不能知道究竟是 <code>P</code> 成立还是 <code>P -&gt; Void</code> 成立，没有「证据」就无法构造。不过我们还是能知道排中律<em>不是错的</em>，仔细观察这个定理：</p>
+<pre><code class="language-idris">nnlem : (Either p (p -&gt; Void) -&gt; Void) -&gt; Void
+nnlem f = f (Right (\p =&gt; f (Left p)))
+</code></pre>
+<p>如果有个经典逻辑命题 <code>q</code> 的证明 <code>qProof</code> 需要排中律，则可以像这样证明 <code>q</code> 的双重否定：</p>
+<pre><code class="language-idris">proof3 : (q -&gt; Void) -&gt; Void
+proof3 f = nnlem (\lem =&gt; f (qProof lem))
+</code></pre>
+<p>这确实很合理，我们知道 <code>p</code> 和 <code>p -&gt; Void</code> 里有一个是真命题，但我们并不知道究竟是哪一个，如果真证明出了我们岂不是能靠模式匹配凭空知道一个命题是不是真的。而 <code>nnlem</code> 用一个参数为排中律，返回值类型为 <code>Void</code> 的函数限制了 <code>lem</code> 的作用域。而且即使是在作用域里进行模式匹配，由于返回值类型为 <code>Void</code> 我们并不能从函数中掏出任何信息来，没有什么能从这个函数作用域中逃逸。从函数的外面来看就是用了排中律但仍然不知道命题 <code>p</code> 究竟是真是假。这样的性质无疑是和排中律最原始的描述非常相符，所以从某种角度来说我觉得拿 <code>nnlem</code> 当成直觉主义逻辑之下的排中律并无不妥。</p>
+<h2 id="计算性质">计算性质</h2>
+<p>虽然用 <code>p -&gt; Void</code> 来表示 <code>p</code> 是假命题非常符合直觉，但它有个比较头疼的问题：它没有任何计算性质。也就是说虽然我们能构造出函数把 <code>((p -&gt; Void) -&gt; Void) -&gt; Void</code> 变成 <code>p -&gt; Void</code> 但是并不能直接 unify 它们。不过呢，这可以被迂回解决，我们可以设计一个新类型来表示命题，这个新类型同时包含 <code>p</code> 和 <code>p -&gt; Void</code> 和它们相悖的证据，而 not 只需要交换它们的位置就好。</p>
+<pre><code class="language-idris"><span class="hljs-keyword">record</span> PProp <span class="hljs-keyword">where</span>
+    <span class="hljs-keyword">constructor</span> MkPProp
+    pos : Type
+    neg : Type
+    chu : pos -&gt; neg -&gt; Void
+
+tight : Type -&gt; PProp
+tight p = MkPProp p (p -&gt; Void) (\p n =&gt; n p)
+
+not : PProp -&gt; PProp
+not q = MkPProp q.neg q.pos (\n p =&gt; q.chu p n)
+</code></pre>
+<p><a href="https://gist.github.com/Trebor-Huang/6c5cd87fff8b50d23411a034c59daabb">代码来源</a></p>
+<p>在 <code>PProp</code> 中 <code>pos</code> 作为当前的主命题 <code>neg</code> 作为与 <code>pos</code> 相悖的命题，而 <code>chu</code> 作为它们相悖的证据。我们可以通过 <code>tight</code> 函数将直觉主义逻辑命题变换进这个新的命题空间，而且可以用 <code>pos</code> 将其变回直觉主义逻辑命题。而且新的命题类型可以通过编译器的计算 unify <code>p</code> 和 <code>not (not p)</code>。</p>
+<p>不仅如此，Trebor 指出 <code>pos</code> 和 <code>neg</code> 不一定需要其中一个是正确的，它们只需要不同时为 <code>Void</code> 就好。而在 <code>PProp</code> 之上建立的类型系统就是 Chu Construction 了。</p>
+</body>
+</html>
