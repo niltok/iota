@@ -12,11 +12,11 @@ hljs.registerLanguage('idris', function(hljs) {
     }
 })
 
-if (fs.existsSync("html")) fs.rmSync("html", {
+if (fs.existsSync("docs")) fs.rmSync("docs", {
     recursive: true
 })
 
-fs.mkdirSync("html")
+fs.mkdirSync("docs")
 
 const config = JSON.parse(fs.readFileSync('config.json').toString())
 
@@ -72,9 +72,9 @@ const gen = conf => s => {
         })))
 }
 
-fs.readdirSync("docs").forEach(f => {
+fs.readdirSync("src").forEach(f => {
     if (f.endsWith(".md")) {
-        const content = fs.readFileSync("docs/" + f).toString()
-        fs.writeFileSync("html/" + f.slice(0, f.length - 3) + ".html", gen(config[f])(content))
+        const content = fs.readFileSync("src/" + f).toString()
+        fs.writeFileSync("docs/" + f.slice(0, f.length - 3) + ".html", gen(config[f])(content))
     }
 })
