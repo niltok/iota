@@ -1,0 +1,351 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>
+点菜数据类型 (Data types à la carte)</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style>
+body { max-width: 650px; margin: auto; width: 90%; margin-top: 10%; margin-bottom: 10%; color: #0B0E26; background: #FAFAFC; line-height: 2em; font-variant-ligatures: common-ligatures discretionary-ligatures; -webkit-font-feature-settings: "liga" on, "calt" on; font-feature-settings: "liga" on, "calt" on; }
+body { font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif; }
+h1 { font-size: 2.5em; color: #EF96AB; line-height: 1.5em; }
+h2 { margin-top: 2em; line-height: 1.5em; }
+blockquote { color: gray; margin: 0; padding: 1 1 1 20; border-left: 5px solid #EF96AB; }
+code, pre { font-family: "JetBrains Mono","等距更纱黑体 SC","Fira Code",Menlo,Monaco,source-code-pro,Courier New,Consolas,monospace; background: #FCF6FC; border-radius: 3px; padding-inline: 0.3rem; }
+pre { overflow-x: auto; padding: 1rem; }
+pre>code { padding-inline: 0; }
+a { color: #02AEF1; text-decoration: none; }
+@media (prefers-color-scheme: dark) { body { color: #D8D8D6; background: #0E0E10; } }
+@media (prefers-color-scheme: dark) { pre, code { color: #D8D8D6; background: #0E0F1F; } }
+.hljs-keyword { color: #F288AF; }
+.hljs-comment { color: #929CA6; }
+.hljs-string { color: #0594A6; }
+.hljs-title { color: #4581D9; }
+.hljs-type, .hljs-built_in { color: #fca311; }
+</style>
+</head>
+<body>
+<p>
+<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="点菜数据类型-data-types-à-la-carte">点菜数据类型 (Data types à la carte)</h1>
+<blockquote>
+<p>本文是 <a href="https://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf">这篇论文</a> 的粗略科普，一些比较细节的地方还是建议去读原文了解。</p>
+</blockquote>
+<h2 id="expression-problem">Expression problem</h2>
+<p>在 Haskell 中实现一个简单的运算解释器是件很容易的事情：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Expr</span> = <span class="hljs-type">Val</span> <span class="hljs-type">Int</span> | <span class="hljs-type">Add</span> <span class="hljs-type">Expr</span> <span class="hljs-type">Expr</span></span>
+
+<span class="hljs-title">eval</span> :: <span class="hljs-type">Expr</span> -&gt; <span class="hljs-type">Int</span>
+<span class="hljs-title">eval</span> (<span class="hljs-type">Val</span> x) = x
+<span class="hljs-title">eval</span> (<span class="hljs-type">Add</span> a b) = (eval a) + (eval b)
+</code></pre>
+<p>定义 <code>Expr</code> 类型之后我们还可以为它添加一些别的功能，比如打印：</p>
+<pre><code class="language-haskell"><span class="hljs-title">render</span> :: <span class="hljs-type">Expr</span> -&gt; <span class="hljs-type">String</span>
+<span class="hljs-title">render</span> (<span class="hljs-type">Val</span> x) = show x
+<span class="hljs-title">render</span> (<span class="hljs-type">Add</span> a b) = <span class="hljs-string">&quot;(&quot;</span> ++ (render a) ++ <span class="hljs-string">&quot; + &quot;</span> ++ (render b) ++ <span class="hljs-string">&quot;)&quot;</span>
+</code></pre>
+<p>可以看到像这样定义的表达式，添加一个功能并不需要改动原来的代码，非常容易，但如果想扩展表达式节点类型，就需要修改所有的功能代码增加模式匹配分支，这就非常麻烦了。如果用 Java 那种面向对象编程的处理方法又会导致添加子类很容易但添加方法需要修改所有子类。而 Expression problem 的目标是让扩展功能和扩展节点类型尽量解耦，使添加新功能和新类型都不需要修改原始代码。</p>
+<h2 id="着手尝试解决">着手尝试解决</h2>
+<p>既然希望自由扩展节点类型定义那分离类型定义和节点定义应该是看上去不错的方向。比如，这里把表达式的节点类型当成 <code>Expr</code> 类型的参数 <code>f</code>：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Expr</span> f = <span class="hljs-type">In</span> (<span class="hljs-title">f</span> (<span class="hljs-type">Expr</span> <span class="hljs-title">f</span>))</span>
+</code></pre>
+<p>注意构造器 <code>In</code> 参数的类型，它把 <code>Expr f</code> 作为了 <code>f</code> 的参数，这样 <code>f</code> 就能拿到它所在的主表达式的类型，进而可以递归传递给子表达式。这个操作就类似于 Y 组合子把 <code>Y f</code> 作为 self 参数传递给递归函数。这样一来就可分别定义 <code>Val</code> 和 <code>Add</code> 的节点类型：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Val</span> e = <span class="hljs-type">Val</span> <span class="hljs-type">Int</span></span>
+<span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">ValExpr</span> = <span class="hljs-type">Expr</span> <span class="hljs-type">Val</span></span>
+
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Add</span> e = <span class="hljs-type">Add</span> e e</span>
+<span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">AddExpr</span> = <span class="hljs-type">Expr</span> <span class="hljs-type">Add</span></span>
+</code></pre>
+<p>这里的 <code>ValExpr</code> 就是只有 <code>Val</code> 节点的表达式，同理 <code>AddExpr</code> 就是只有 <code>Add</code> 节点的表达式。按照函数式的思想，还需要什么东西来把它们组合起来才能形成复杂的表达式。</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) e = <span class="hljs-type">Inl</span> (<span class="hljs-title">f</span> <span class="hljs-title">e</span>) | <span class="hljs-type">Inr</span> (<span class="hljs-title">g</span> <span class="hljs-title">e</span>)</span>
+</code></pre>
+<p>那么 <code>Expr (f :+: g)</code> 就可以表示包含 <code>f</code> 和 <code>g</code> 的表达式。那为什么是类似于 <code>Either</code> 的结构呢？因为该类型的实例表示的 AST 的根节点要么是 <code>f</code> 类型的节点，要么是 <code>g</code> 类型的节点。（而子节点的类型又来自 <code>e</code> 传递的主表达式类型）。这里就举个表示 <code>119 + 1219</code> 的 AST 例子：</p>
+<pre><code class="language-haskell"><span class="hljs-title">addExpr</span> :: <span class="hljs-type">Expr</span> (<span class="hljs-type">Val</span> :+: <span class="hljs-type">Add</span>)
+<span class="hljs-title">addExpr</span> = <span class="hljs-type">In</span> (<span class="hljs-type">Inr</span> (<span class="hljs-type">Add</span> (<span class="hljs-type">In</span> (<span class="hljs-type">Inl</span> (<span class="hljs-type">Val</span> <span class="hljs-number">119</span>)) (<span class="hljs-type">In</span> (<span class="hljs-type">Inl</span> (<span class="hljs-type">Val</span> <span class="hljs-number">1219</span>)))))
+</code></pre>
+<p>如果想扩展表达式类型，只需要定义类型然后把多个类型用 <code>:+:</code> 组合起来就可以了。比如如果想再加个 <code>Sub</code> 就可以用 <code>Expr (Val :+: Add :+: Sub)</code> 表示。</p>
+<h2 id="求值">求值</h2>
+<p>很显然，之前定义的几个表达式类型包括 <code>:+:</code> 都是 Functor：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> <span class="hljs-type">Val</span> <span class="hljs-keyword">where</span></span>
+  fmap f (<span class="hljs-type">Val</span> x) = <span class="hljs-type">Val</span> x
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> <span class="hljs-type">Add</span> <span class="hljs-keyword">where</span></span>
+  fmap f (<span class="hljs-type">Add</span> a b) = <span class="hljs-type">Add</span> (f a) (f b)
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>) =&gt; <span class="hljs-type">Functor</span> (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  fmap f (<span class="hljs-type">Inl</span> x) = <span class="hljs-type">Inl</span> (fmap f x)
+  fmap f (<span class="hljs-type">Inr</span> x) = <span class="hljs-type">Inr</span> (fmap f x)
+</code></pre>
+<p>既然它们是 Functor，我们就可以在它们上面 fold：</p>
+<pre><code class="language-haskell"><span class="hljs-title">foldExpr</span> :: <span class="hljs-type">Functor</span> f =&gt; (f a -&gt; a) -&gt; <span class="hljs-type">Expr</span> f -&gt; a
+<span class="hljs-title">foldExpr</span> f (<span class="hljs-type">In</span> x) = f (fmap (foldExpr f) x)
+</code></pre>
+<p>考虑定义一个 typeclass 来描述各表达式类型的求值方法：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Eval</span> f <span class="hljs-keyword">where</span></span>
+  evalAlgebra :: f <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Int</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Eval</span> <span class="hljs-type">Val</span> <span class="hljs-keyword">where</span></span>
+  evalAlgebra (<span class="hljs-type">Val</span> x) = x
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Eval</span> <span class="hljs-type">Add</span> <span class="hljs-keyword">where</span></span>
+  evalAlgebra (<span class="hljs-type">Add</span> a b) = a + b
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Eval</span> <span class="hljs-title">f</span>, <span class="hljs-type">Eval</span> <span class="hljs-title">g</span>) =&gt; <span class="hljs-type">Eval</span> (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  evalAlgebra (<span class="hljs-type">Inl</span> x) = evalAlgebra x
+  evalAlgebra (<span class="hljs-type">Inr</span> x) = evalAlgebra x
+</code></pre>
+<p>而求值过程本质上就是在 AST 上对 <code>evalAlgebra</code> 的 fold：</p>
+<pre><code class="language-haskell"><span class="hljs-title">eval</span> :: <span class="hljs-type">Eval</span> f =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Int</span>
+<span class="hljs-title">eval</span> = foldExpr evalAlgebra
+</code></pre>
+<p>于是就可以用 <code>eval addExample</code> 求出 <code>119 + 1219</code> 为 <code>1137</code>。这时候若是想加入 <code>Sub</code> 则只需要为其实现 <code>Functor</code> 和 <code>Eval</code> typeclass。</p>
+<blockquote>
+<p>Haskell 中有个叫 Finally Tagless 的办法也同样可以用来解决 Expression problem，实际上它的思路和这里的 <code>Eval</code> 非常类似，只是扩展功能的思路不太一样。这里推荐 <a href="https://zhuanlan.zhihu.com/p/53810286">千里冰封写得相关文章</a> 里面包括了 Java 中的 Visitor 模式和 Haskell 中的 Finally Tagless 的介绍。</p>
+<p>就个人感觉，Data type à la carte 和 Finally Tagless 思路挺相似，但是 Data type à la carte 的组合模式更加自由，而 Finally Tagless 既不需要 <code>:+:</code> 和自动注入之类的基础工具支持也不需要 OverlappingInstances 这样的语言支持，用起来更贴近原生 Haskell。</p>
+</blockquote>
+<h2 id="自动注入">自动注入</h2>
+<p>从上面的例子可以发现 <code>addExample</code> 的例子非常复杂，而且如果把类型中的 <code>Val</code> 和 <code>Add</code> 换个顺序或加入一个 <code>Sub</code> 它就直接炸了，可移植性很差。我们需要一个能把各节点自动注入到组合类型中的智能构造器来解耦表达式和它的类型。考虑形如 <code>a :+: b :+: c :+: ...</code> 的组合类型 <code>f</code> ，若这个列表中存在 <code>Val</code> 则智能构造器 <code>val</code> 可以被注入其中。我们定义一个 typeclass 运算符 <code>:&lt;:</code> 来表示可以注入的关系：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>) =&gt; f :&lt;: g <span class="hljs-keyword">where</span></span>
+  inj :: f a -&gt; g a
+</code></pre>
+<p>而这个 <code>:+:</code> 中的 <code>inj</code> 则用于生成节点 <code>f</code> 在组合类型 <code>g</code> 中由 <code>Inl</code> 和 <code>Inr</code> 组成的构造路径。就比如在 <code>addExample</code> 中，对于 <code>Val :&lt;: (Val :+: Add :+: Sub)</code> 则可以生成 <code>Inl</code>，而对于 <code>Add :&lt;: (Val :+: Add :+: Sub)</code> 则可以生成 <code>Inr . Inl</code>。</p>
+<p>而它的具体实现就是在这原理基础上的归纳：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>) =&gt; f :&lt;: f <span class="hljs-keyword">where</span></span>
+  inj = id
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>) =&gt; f :&lt;: (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  inj = <span class="hljs-type">Inl</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">h</span>, <span class="hljs-title">f</span> :&lt;: <span class="hljs-title">g</span>) =&gt; f :&lt;: (<span class="hljs-title">h</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  inj = <span class="hljs-type">Inr</span> . inj
+</code></pre>
+<p>有了构造路径再套上一个 <code>In</code>，我们就可以为 <code>Expr</code> 构造出特化的自动注入函数并为各表达式节点类型构造智能构造器：</p>
+<pre><code class="language-haskell"><span class="hljs-title">inject</span> :: (f :&lt;: g) =&gt; g (<span class="hljs-type">Expr</span> f) -&gt; <span class="hljs-type">Expr</span> f
+<span class="hljs-title">inject</span> = <span class="hljs-type">In</span> . inj
+
+<span class="hljs-title">val</span> :: (<span class="hljs-type">Val</span> :&lt;: f) =&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Expr</span> f
+<span class="hljs-title">val</span> x = inject (<span class="hljs-type">Val</span> x)
+
+<span class="hljs-title">add</span> :: (<span class="hljs-type">Add</span> :&lt;: f) =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Expr</span> f
+<span class="hljs-title">add</span> x y = inject (<span class="hljs-type">Add</span> x y)
+</code></pre>
+<p>利用 typeclass 约束，这里的 <code>val</code> 和 <code>add</code> 可以被注入到任意包含对应类型的 <code>f</code> 组合类型中。</p>
+<p>这样就可以轻松构造出 AST 了：</p>
+<pre><code class="language-haskell"><span class="hljs-title">injExample</span> :: <span class="hljs-type">Expr</span> (<span class="hljs-type">Val</span> :+: <span class="hljs-type">Add</span>)
+<span class="hljs-title">injExample</span> = add (val <span class="hljs-number">30000</span>) (add (val <span class="hljs-number">1330</span>) (val <span class="hljs-number">7</span>))
+</code></pre>
+<p>用 <code>eval injExample</code> 就可以得到 <code>31337</code>，而且不管怎么修改 <code>injExample</code> 的类型，只要列表里面包含 <code>Val</code> 和 <code>Add</code> 都能自动生成正确的 AST。</p>
+<h2 id="更多例子">更多例子</h2>
+<p>在上面 <code>Val :+: Add</code> 的基础上，我们再尝试加入 <code>Mul</code> 节点：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Mul</span> e = <span class="hljs-type">Mul</span> e e</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> <span class="hljs-type">Mul</span> <span class="hljs-keyword">where</span></span>
+  fmap f (<span class="hljs-type">Mul</span> x y) = <span class="hljs-type">Mul</span> (f x) (f y)
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Eval</span> <span class="hljs-type">Mul</span> <span class="hljs-keyword">where</span></span>
+  evalAlgebra (<span class="hljs-type">Mul</span> x y) = x * y
+
+<span class="hljs-title">mul</span> :: (<span class="hljs-type">Mul</span> :&lt;: f) =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Expr</span> f
+<span class="hljs-title">mul</span> x y = inject (<span class="hljs-type">Mul</span> x y)
+</code></pre>
+<p>就只需要加这么几行就可以在原来的功能上增加 <code>Mul</code> 节点了，完全不需要修改原本的代码。然后在此基础上扩展打印功能：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Render</span> f <span class="hljs-keyword">where</span></span>
+  render :: (<span class="hljs-type">Render</span> g) =&gt; f (<span class="hljs-type">Expr</span> g) -&gt; <span class="hljs-type">String</span>
+
+<span class="hljs-title">pretty</span> :: (<span class="hljs-type">Render</span> f) =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">String</span>
+<span class="hljs-title">pretty</span> (<span class="hljs-type">In</span> x) = render x
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> <span class="hljs-type">Val</span> <span class="hljs-keyword">where</span></span>
+  render (<span class="hljs-type">Val</span> x) = show x
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> <span class="hljs-type">Add</span> <span class="hljs-keyword">where</span></span>
+  render (<span class="hljs-type">Add</span> x y) = <span class="hljs-string">&quot;(&quot;</span> ++ pretty x ++ <span class="hljs-string">&quot; + &quot;</span> ++ pretty y ++ <span class="hljs-string">&quot;)&quot;</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> <span class="hljs-type">Mul</span> <span class="hljs-keyword">where</span></span>
+  render (<span class="hljs-type">Mul</span> x y) = <span class="hljs-string">&quot;(&quot;</span> ++ pretty x ++ <span class="hljs-string">&quot; * &quot;</span> ++ pretty y ++ <span class="hljs-string">&quot;)&quot;</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> f =&gt; <span class="hljs-type">Render</span> (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  render (<span class="hljs-type">Inl</span> x) = render x
+  render (<span class="hljs-type">Inr</span> x) = render x
+</code></pre>
+<p>同样只需要添加新代码而不需要改动原代码。用 <code>pretty injExample</code> 就可以得到 <code>&quot;(30000 + (1330 + 7))&quot;</code>。</p>
+<blockquote>
+<p>这个 <code>Render</code> 的例子在原论文中并没有像之前的 <code>Eval</code> 使用 fold 来定义而是直接递归，说实话我还挺困惑的，强迫症表示看着很不舒服。如果说想像之前那样用 fold 定义应该是这样的（并没有编译运行验证过）：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-type">Render</span> f <span class="hljs-keyword">where</span></span>
+    render :: f <span class="hljs-type">String</span> -&gt; <span class="hljs-type">String</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> <span class="hljs-type">Val</span> <span class="hljs-keyword">where</span></span>
+    render (<span class="hljs-type">Val</span> x) = show x
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> <span class="hljs-type">Add</span> <span class="hljs-keyword">where</span></span>
+    render (<span class="hljs-type">Add</span> x y) = <span class="hljs-string">&quot;(&quot;</span> ++ x ++ <span class="hljs-string">&quot; + &quot;</span> ++ y ++ <span class="hljs-string">&quot;)&quot;</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Render</span> <span class="hljs-type">Mul</span> <span class="hljs-keyword">where</span></span>
+    render (<span class="hljs-type">Mul</span> x y) = <span class="hljs-string">&quot;(&quot;</span> ++ x ++ <span class="hljs-string">&quot; * &quot;</span> ++ y ++ <span class="hljs-string">&quot;)&quot;</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Render</span> <span class="hljs-title">f</span>, <span class="hljs-type">Render</span> <span class="hljs-title">g</span>) =&gt; <span class="hljs-type">Render</span> (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+    render (<span class="hljs-type">Inl</span> x) = render x
+    render (<span class="hljs-type">Inr</span> x) = render x
+
+<span class="hljs-title">pretty</span> :: (<span class="hljs-type">Render</span> f) =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">String</span>
+<span class="hljs-title">pretty</span> = foldExpr render
+</code></pre>
+</blockquote>
+<p>另外，<code>f :&lt;: g</code> 既然能把类型 <code>f</code> 的实例注入成组合类型 <code>g</code>，那也应该存在一个偏函数把 <code>g</code> 的实例投射到 <code>f</code> 上：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">class</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>) =&gt; f :&lt;: g <span class="hljs-keyword">where</span></span>
+  inj :: f a -&gt; g a
+  prj :: g a -&gt; <span class="hljs-type">Maybe</span> (f a)
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>) =&gt; f :&lt;: f <span class="hljs-keyword">where</span></span>
+  inj = id
+  prj = <span class="hljs-type">Just</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>) =&gt; f :&lt;: (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  inj = <span class="hljs-type">Inl</span>
+  prj (<span class="hljs-type">Inl</span> x) = <span class="hljs-type">Just</span> x
+  prj _ = <span class="hljs-type">Nothing</span>
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> (<span class="hljs-type">Functor</span> <span class="hljs-title">f</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">g</span>, <span class="hljs-type">Functor</span> <span class="hljs-title">h</span>, <span class="hljs-title">f</span> :&lt;: <span class="hljs-title">g</span>) =&gt; f :&lt;: (<span class="hljs-title">h</span> :+: <span class="hljs-title">g</span>) <span class="hljs-keyword">where</span></span>
+  inj = <span class="hljs-type">Inr</span> . inj
+  prj (<span class="hljs-type">Inr</span> x) = <span class="hljs-type">Just</span> x
+  prj _ = <span class="hljs-type">Nothing</span>
+</code></pre>
+<p>这个投射在有些时候还挺有用，比如变换 AST 的时候有可能需要解构实例。这里有个乘法分配律的例子：</p>
+<pre><code class="language-haskell"><span class="hljs-title">match</span> :: (f :&lt;: g) =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Maybe</span> (g (<span class="hljs-type">Expr</span> f))
+<span class="hljs-title">match</span> (<span class="hljs-type">In</span> x) = prj x
+
+<span class="hljs-title">distr</span> :: (<span class="hljs-type">Add</span> :&lt;: f, <span class="hljs-type">Mul</span> :&lt;: f) =&gt; <span class="hljs-type">Expr</span> f -&gt; <span class="hljs-type">Maybe</span> (<span class="hljs-type">Expr</span> f)
+<span class="hljs-title">distr</span> t = <span class="hljs-keyword">do</span>
+  <span class="hljs-type">Mul</span> a b &lt;- match t
+  <span class="hljs-type">Add</span> c d &lt;- match b
+  pure (add (mul a c) (mul a d))
+</code></pre>
+<p>在知道原表达式 <code>t</code> 的结构为 <code>mul a (add c d)</code> 的情况下利用投射匹配得到 <code>a</code> <code>b</code> <code>c</code> 然后再重新组合。</p>
+<h2 id="monads-for-free">Monads for free</h2>
+<p>考虑对 <code>Expr</code> 做出如下修改：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Term</span> f a = <span class="hljs-type">Pure</span> a | <span class="hljs-type">Impure</span> (<span class="hljs-title">f</span> (<span class="hljs-type">Term</span> <span class="hljs-title">f</span> <span class="hljs-title">a</span>))</span>
+</code></pre>
+<p>它包含了无副作用的值和带副作用的操作。</p>
+<p>可以证明如果参数 <code>f</code> 是一个 Functor 那么它是一个 Monad：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Functor</span> (<span class="hljs-type">Term</span> <span class="hljs-title">f</span>) <span class="hljs-keyword">where</span></span>
+  fmap f (<span class="hljs-type">Pure</span> x) = <span class="hljs-type">Pure</span> (f x)
+  fmap f (<span class="hljs-type">Impure</span> x) = <span class="hljs-type">Impure</span> (fmap (fmap f) x)
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Applicative</span> (<span class="hljs-type">Term</span> <span class="hljs-title">f</span>) <span class="hljs-keyword">where</span></span>
+  pure = <span class="hljs-type">Pure</span>
+  <span class="hljs-type">Pure</span> f &lt;*&gt; x = fmap f x
+  <span class="hljs-type">Impure</span> f &lt;*&gt; x = <span class="hljs-type">Impure</span> (fmap (&lt;*&gt; x) f)
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Monad</span> (<span class="hljs-type">Term</span> <span class="hljs-title">f</span>) <span class="hljs-keyword">where</span></span>
+  <span class="hljs-type">Pure</span> x &gt;&gt;= f = f x
+  <span class="hljs-type">Impure</span> x &gt;&gt;= f = <span class="hljs-type">Impure</span> (fmap (&gt;&gt;= f) x)
+</code></pre>
+<p>这就是著名的 Free Monad，它能把任意 Functor 变成 Monad。</p>
+<blockquote>
+<p>原论文并没有实现 Applicative，据说是因为曾经 Monad 并不依赖于 Applicative，这也是曾经 Monad 具有 <code>return</code> 这样一个和 <code>pure</code> 功能重复的函数的原因。</p>
+<p>有些人觉得这里的 Free 翻译为「免费」因为它可以不需要额外代码就能把一个 Functor 变成 Monad，不过另一些人觉得应该翻译成「自由」因为在性质上是和 Forgetful 相反的，它可以自由扩展而不需要修改原代码。</p>
+</blockquote>
+<p>很多你熟悉的 Monad 都可以由 Free Monad 构造，考虑以下类型：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Zero</span> a</span>
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">One</span> a = <span class="hljs-type">One</span></span>
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Const</span> e a = <span class="hljs-type">Const</span> e</span>
+</code></pre>
+<p>于是 <code>Term Zero</code> 实际上就是只保存一个值的单位 Monad，<code>Term One</code> 是 <code>Maybe</code>， <code>Term (Const e)</code> 则是 <code>Either e</code>。不过同样也有很多 Monad 并不是 Free 的，比如 <code>List</code> 和 <code>State</code>。</p>
+<p>尽管 <code>State</code> 不是 Free Monad 但利用 <code>Term</code> 可以用来表示具有状态的计算语言。这里举个能获取值 (Recall)、增加值 (Incr) 和清空值 (Clear) 的例子：</p>
+<blockquote>
+<p>Clear 功能在原论文中是个练习，这里顺手写了。</p>
+</blockquote>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Recall</span> t = <span class="hljs-type">Recall</span> (<span class="hljs-type">Int</span> -&gt; <span class="hljs-title">t</span>)</span>
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Incr</span> t = <span class="hljs-type">Incr</span> <span class="hljs-type">Int</span> t</span>
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Clear</span> t = <span class="hljs-type">Clear</span> t</span>
+
+<span class="hljs-title">inject</span> :: (f :&lt;: g) =&gt; f (<span class="hljs-type">Term</span> g a) -&gt; <span class="hljs-type">Term</span> g a
+<span class="hljs-title">inject</span> = <span class="hljs-type">Impure</span> . inj
+
+<span class="hljs-title">recall</span> :: (<span class="hljs-type">Recall</span> :&lt;: f) =&gt; <span class="hljs-type">Term</span> f <span class="hljs-type">Int</span>
+<span class="hljs-title">recall</span> = inject (<span class="hljs-type">Recall</span> pure)
+
+<span class="hljs-title">incr</span> :: (<span class="hljs-type">Incr</span> :&lt;: f) =&gt; <span class="hljs-type">Int</span> -&gt; <span class="hljs-type">Term</span> f ()
+<span class="hljs-title">incr</span> n = inject (<span class="hljs-type">Incr</span> n (pure ()))
+
+<span class="hljs-title">clear</span> :: (<span class="hljs-type">Clear</span> :&lt;: f) =&gt; <span class="hljs-type">Term</span> f ()
+<span class="hljs-title">clear</span> = inject (<span class="hljs-type">Clear</span> (pure ()))
+</code></pre>
+<p>利用 Haskell 的 do 语法糖可以轻松构造出复杂的语句，这里举个给状态值增加 1 然后返回原始值的例子：</p>
+<pre><code class="language-haskell"><span class="hljs-title">tick</span> :: <span class="hljs-type">Term</span> (<span class="hljs-type">Recall</span> :+: <span class="hljs-type">Incr</span>) <span class="hljs-type">Int</span>
+<span class="hljs-title">tick</span> = <span class="hljs-keyword">do</span>
+  x &lt;- recall
+  incr <span class="hljs-number">1</span>
+  pure x
+</code></pre>
+<p>这里的 <code>tick</code> 也可采用更泛化的类型 <code>(Recall :&lt;: f, Incr :&lt;: f) =&gt; Term f Int</code>，这样就能在任何包含 <code>Recall</code> 和 <code>Incr</code> 的 <code>Term</code> 中调用了。</p>
+<p>接下来就按照之前 <code>Expr</code> 的经验来写出 <code>Term</code> 的解释器，只不过这里为了传递状态需要 fold 出一个签名为 <code>... =&gt; Term f a -&gt; Int -&gt; (a, Int)</code> 函数：</p>
+<pre><code class="language-haskell"><span class="hljs-comment">-- 第一个参数用来折叠 Pure，第二个参数用来折叠 Impure</span>
+<span class="hljs-title">foldTerm</span> :: <span class="hljs-type">Functor</span> f =&gt; (a -&gt; b) -&gt; (f b -&gt; b) -&gt; <span class="hljs-type">Term</span> f a -&gt; b
+<span class="hljs-title">foldTerm</span> pure impure (<span class="hljs-type">Pure</span> x) = pure x
+<span class="hljs-title">foldTerm</span> pure impure (<span class="hljs-type">Impure</span> x) = impure (fmap (foldTerm pure impure) x)
+<span class="hljs-class">
+<span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Run</span> f <span class="hljs-keyword">where</span></span>
+  runAlgebra :: f (<span class="hljs-type">Int</span> -&gt; (a, <span class="hljs-type">Int</span>)) -&gt; (<span class="hljs-type">Int</span> -&gt; (a, <span class="hljs-type">Int</span>))
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Run</span> <span class="hljs-type">Recall</span> <span class="hljs-keyword">where</span></span>
+  runAlgebra (<span class="hljs-type">Recall</span> f) i = f i i
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Run</span> <span class="hljs-type">Incr</span> <span class="hljs-keyword">where</span></span>
+  runAlgebra (<span class="hljs-type">Incr</span> n f) i = f (i + n)
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Run</span> <span class="hljs-type">Clear</span> <span class="hljs-keyword">where</span></span>
+  runAlgebra (<span class="hljs-type">Clear</span> f) _ = f <span class="hljs-number">0</span>
+
+<span class="hljs-title">run</span> :: (<span class="hljs-type">Run</span> f) =&gt; <span class="hljs-type">Term</span> f a -&gt; (<span class="hljs-type">Int</span> -&gt; (a, <span class="hljs-type">Int</span>))
+<span class="hljs-title">run</span> = foldTerm (\a x -&gt; (a, x)) runAlgebra
+<span class="hljs-comment">--    foldTerm (,) runAlgebra</span>
+</code></pre>
+<p>这里 <code>run</code> 的效果就很类似 <code>runState</code> 了。于是 <code>run tick 4</code> 就可以得到 <code>(4, 5)</code>。</p>
+<h2 id="应用">应用</h2>
+<p>类似于之前的 <code>Expr</code> 可以组合不同的表达式节点，<code>Term</code> 也可以组合不同的 Free Monad 到一起使用。这里举个终端和文件系统混合输入输出的例子：</p>
+<pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">Teletype</span> a = </span>
+    <span class="hljs-type">PutChar</span> <span class="hljs-type">Char</span> a 
+  | <span class="hljs-type">GetChar</span> (<span class="hljs-type">Char</span> -&gt; a)
+<span class="hljs-class"><span class="hljs-keyword">data</span> <span class="hljs-type">FileSystem</span> a = </span>
+    <span class="hljs-type">WriteFile</span> <span class="hljs-type">FilePath</span> <span class="hljs-type">String</span> a 
+  | <span class="hljs-type">ReadFile</span> <span class="hljs-type">FilePath</span> (<span class="hljs-type">String</span> -&gt; a)
+
+<span class="hljs-comment">-- 省略了 Functor 实现</span>
+<span class="hljs-class">
+<span class="hljs-keyword">class</span> <span class="hljs-type">Functor</span> f =&gt; <span class="hljs-type">Exec</span> f <span class="hljs-keyword">where</span></span>
+  execAlgebra :: f (<span class="hljs-type">IO</span> a) -&gt; <span class="hljs-type">IO</span> a
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Exec</span> <span class="hljs-type">Teletype</span> <span class="hljs-keyword">where</span></span>
+  execAlgebra (<span class="hljs-type">PutChar</span> c x) = <span class="hljs-type">Prelude</span>.putChar c &gt;&gt; x
+  execAlgebra (<span class="hljs-type">GetChar</span> f) = <span class="hljs-type">Prelude</span>.getChar &gt;&gt;= f
+<span class="hljs-class">
+<span class="hljs-keyword">instance</span> <span class="hljs-type">Exec</span> <span class="hljs-type">FileSystem</span> <span class="hljs-keyword">where</span></span>
+  execAlgebra (<span class="hljs-type">WriteFile</span> fp s x) = <span class="hljs-type">Prelude</span>.writeFile fp s &gt;&gt; x
+  execAlgebra (<span class="hljs-type">ReadFile</span> fp f) = <span class="hljs-type">Prelude</span>.readFile fp &gt;&gt;= f
+
+<span class="hljs-comment">-- 省略了智能构造器的实现</span>
+
+<span class="hljs-title">exec</span> :: (<span class="hljs-type">Exec</span> f) =&gt; <span class="hljs-type">Term</span> f a -&gt; <span class="hljs-type">IO</span> a
+<span class="hljs-title">exec</span> = foldTerm pure execAlgebra
+
+<span class="hljs-title">cat</span> :: (<span class="hljs-type">Teletype</span> :&lt;: f, <span class="hljs-type">FileSystem</span> :&lt;: f) =&gt; <span class="hljs-type">FilePath</span> -&gt; <span class="hljs-type">Term</span> f ()
+<span class="hljs-title">cat</span> fp = <span class="hljs-keyword">do</span>
+  contents &lt;- readFile fp
+  mapM putChar contents
+  pure ()
+</code></pre>
+<h2 id="玩火的后记">玩火的后记</h2>
+<p>记录一些读完原论文后的想法，算是一些原文没明说的个人理解。</p>
+<h3 id="关于命名">关于命名</h3>
+<p>所谓点菜 (à la carte) 就是指分开点的菜，这样编程就好像在一家餐厅点菜，餐厅预先准备了可以用来「炒」的几个菜，可以用来「炖」的几个菜（库中实现了求值的几个节点类型，实现了打印的几个节点类型），而我就可以按照我的需求把西红柿和鸡蛋组合起来（把 <code>Teletype</code> 和 <code>FileSystem</code> 的节点组合成 <code>cat</code> 这样的 AST），然后要求厨师把它们炒成一盘菜（通过 <code>exec cat</code> 生成可执行代码）。</p>
+<p>所以我感觉这个命名就非常有灵性。</p>
+<h3 id="关于-effect">关于 Effect</h3>
+<p>个人感觉这玩意特别适合拿来搞 Effect System，文末的 <code>cat</code> 例子就很能说明它的潜力。对于多种 Monad 混用的情况，目前 Haskell 的主流方案（标准库方案）是 Monad Transformer，但是这玩意一方面组合多了 lift 起来非常麻烦，另一方面使用的时候极其依赖 Monad 的组合顺序，非常不灵活，可以说是比较难用的方案。而点菜数据类型只需要指明用了哪些 Effect 就能自动处理复杂组合和扩展问题，而且它能在实现 <code>Exec</code> 时调用 <code>lift</code> 从而完美对接 Monad Transformer 原有的函数实现。</p>
+<p>唯一想吐槽的是泛化的类型依赖列表在无语法糖的情况下写出来真是巨长，而且没办法用全局变量表达从而简化依赖长度。如果编译器再来个自动推导依赖列表的功能那将是绝杀，可惜暂时加不得。</p>
+<h3 id="关于-free-monad">关于 Free Monad</h3>
+<p>由于 <code>Impure</code> 的递归性质，只要给出合适的 <code>f</code>，实际上它能构造出任意形状的结构，但是为了保证 Monad 性质而存在的 <code>Pure</code> 使 Free Monad 不能和一些 Monad 完美匹配，比如文中提到的 <code>data [a] = Nil | a : [a]</code> 就不存在和 <code>Pure a</code> 类似的构造器。不过由于完备的 <code>Impure</code> 的存在，所有 ADT 都能嵌入到 Free Monad 当中。所以尽管不是所有的 Monad 都是 Free Monad，但 Free Monad 总能实现它们的实际功能。这事就有点类似于经典逻辑能嵌入到直觉主义逻辑，就我个人觉得直接拿更「大」的系统用也没啥问题。</p>
+<h3 id="在其他语言中的运用">在其他语言中的运用</h3>
+<p>我写之前在网上搜了搜看看有没有别的人写过翻译，结果发现了一个 <a href="https://github.com/jcouyang/alacarte/wiki/%E8%AF%BB%E6%88%91">奇妙的仓库</a> ，作者把点菜数据类型搬到 JavaScript 里面了，还为它实现了一个运行时的注入检查。感觉非常离谱。不过由于存在 Overlapping Instances 的存在，目测主流语言里也就 C++ 能原生在编译期做到注入检查。</p>
+</body>
+</html>

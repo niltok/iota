@@ -23,6 +23,7 @@ const $$ = label => s => '<' + label + '>\n' + s + '</' + label + '>\n'
 
 const charset = '<meta charset="utf-8"/>\n'
 const viewpoint = '<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">\n'
+const icon = '<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">\n'
 const title = conf => $$('title')(conf.title)
 
 const hljscss = '<link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/10.3.2/styles/a11y-light.min.css" rel="stylesheet">'
@@ -53,7 +54,7 @@ const hltype = '.hljs-type, .hljs-built_in { color: #fca311; }\n'
 const hlcss = hlkeyword + hlconmment + hlstring + hltitle + hltype
 const style = $$('style')(sbody + sfont + sh1 + sh2 + squote + scode + spre + sprecode + sa + sdarkbody + sdarkpre + hlcss)
 
-const head = conf => $$('head')(charset + viewpoint + title(conf) + katexcss + style)
+const head = conf => $$('head')(charset + viewpoint + icon + title(conf) + katexcss + style)
 
 const github = '<a href="https://github.com/niltok">🔥GitHub🔥</a>'
 const home = '<a href="https://iota.huohuo.moe">🏠Homepage🏠</a>'
