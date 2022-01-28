@@ -6,6 +6,10 @@
 
 [十分钟魔法练习](https://magic.huohuo.moe)
 
+## 2022
+
+[点菜数据类型 (Data types à la carte)](FreeMonad.html)
+
 ## 2021
 
 [直觉主义逻辑中的排中律](LEM.html)
