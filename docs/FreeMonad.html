@@ -60,8 +60,8 @@ a { color: #02AEF1; text-decoration: none; }
 <pre><code class="language-haskell"><span class="hljs-class"><span class="hljs-keyword">data</span> (<span class="hljs-title">f</span> :+: <span class="hljs-title">g</span>) e = <span class="hljs-type">Inl</span> (<span class="hljs-title">f</span> <span class="hljs-title">e</span>) | <span class="hljs-type">Inr</span> (<span class="hljs-title">g</span> <span class="hljs-title">e</span>)</span>
 </code></pre>
 <p>那么 <code>Expr (f :+: g)</code> 就可以表示包含 <code>f</code> 和 <code>g</code> 的表达式。那为什么是类似于 <code>Either</code> 的结构呢？因为该类型的实例表示的 AST 的根节点要么是 <code>f</code> 类型的节点，要么是 <code>g</code> 类型的节点。（而子节点的类型又来自 <code>e</code> 传递的主表达式类型）。这里就举个表示 <code>119 + 1219</code> 的 AST 例子：</p>
-<pre><code class="language-haskell"><span class="hljs-title">addExpr</span> :: <span class="hljs-type">Expr</span> (<span class="hljs-type">Val</span> :+: <span class="hljs-type">Add</span>)
-<span class="hljs-title">addExpr</span> = <span class="hljs-type">In</span> (<span class="hljs-type">Inr</span> (<span class="hljs-type">Add</span> (<span class="hljs-type">In</span> (<span class="hljs-type">Inl</span> (<span class="hljs-type">Val</span> <span class="hljs-number">119</span>)) (<span class="hljs-type">In</span> (<span class="hljs-type">Inl</span> (<span class="hljs-type">Val</span> <span class="hljs-number">1219</span>)))))
+<pre><code class="language-haskell"><span class="hljs-title">addExample</span> :: <span class="hljs-type">Expr</span> (<span class="hljs-type">Val</span> :+: <span class="hljs-type">Add</span>)
+<span class="hljs-title">addExample</span> = <span class="hljs-type">In</span> (<span class="hljs-type">Inr</span> (<span class="hljs-type">Add</span> (<span class="hljs-type">In</span> (<span class="hljs-type">Inl</span> (<span class="hljs-type">Val</span> <span class="hljs-number">119</span>)) (<span class="hljs-type">In</span> (<span class="hljs-type">Inl</span> (<span class="hljs-type">Val</span> <span class="hljs-number">1219</span>)))))
 </code></pre>
 <p>如果想扩展表达式类型，只需要定义类型然后把多个类型用 <code>:+:</code> 组合起来就可以了。比如如果想再加个 <code>Sub</code> 就可以用 <code>Expr (Val :+: Add :+: Sub)</code> 表示。</p>
 <h2 id="求值">求值</h2>

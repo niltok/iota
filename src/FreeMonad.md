@@ -52,8 +52,8 @@ data (f :+: g) e = Inl (f e) | Inr (g e)
 那么 `Expr (f :+: g)` 就可以表示包含 `f` 和 `g` 的表达式。那为什么是类似于 `Either` 的结构呢？因为该类型的实例表示的 AST 的根节点要么是 `f` 类型的节点，要么是 `g` 类型的节点。（而子节点的类型又来自 `e` 传递的主表达式类型）。这里就举个表示 `119 + 1219` 的 AST 例子：
 
 ```haskell
-addExpr :: Expr (Val :+: Add)
-addExpr = In (Inr (Add (In (Inl (Val 119)) (In (Inl (Val 1219)))))
+addExample :: Expr (Val :+: Add)
+addExample = In (Inr (Add (In (Inl (Val 119)) (In (Inl (Val 1219)))))
 ```
 
 如果想扩展表达式类型，只需要定义类型然后把多个类型用 `:+:` 组合起来就可以了。比如如果想再加个 `Sub` 就可以用 `Expr (Val :+: Add :+: Sub)` 表示。
