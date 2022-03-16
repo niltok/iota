@@ -8,6 +8,8 @@
 
 ## 2022
 
+[W 类型 (W Type)](WType.html)
+
 [点菜数据类型 (Data types à la carte)](FreeMonad.html)
 
 ## 2021

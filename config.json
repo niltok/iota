@@ -10,5 +10,8 @@
     },
     "FreeMonad.md": {
         "title": "点菜数据类型 (Data types à la carte)"
+    },
+    "WType.md": {
+        "title": "W 类型 (W Type)"
     }
 }

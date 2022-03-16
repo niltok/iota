@@ -1,0 +1,122 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>
+W 类型 (W Type)</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style>
+body { max-width: 650px; margin: auto; width: 90%; margin-top: 10%; margin-bottom: 10%; color: #0B0E26; background: #FAFAFC; line-height: 2em; font-variant-ligatures: common-ligatures discretionary-ligatures; -webkit-font-feature-settings: "liga" on, "calt" on; font-feature-settings: "liga" on, "calt" on; }
+body { font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif; }
+h1 { font-size: 2.5em; color: #EF96AB; line-height: 1.5em; }
+h2 { margin-top: 2em; line-height: 1.5em; }
+blockquote { color: gray; margin: 0; padding: 1 1 1 20; border-left: 5px solid #EF96AB; }
+code, pre { font-family: "JetBrains Mono","等距更纱黑体 SC","Fira Code",Menlo,Monaco,source-code-pro,Courier New,Consolas,monospace; background: #FCF6FC; border-radius: 3px; padding-inline: 0.3rem; }
+pre { overflow-x: auto; padding: 1rem; }
+pre>code { padding-inline: 0; }
+a { color: #02AEF1; text-decoration: none; }
+@media (prefers-color-scheme: dark) { body { color: #D8D8D6; background: #0E0E10; } }
+@media (prefers-color-scheme: dark) { pre, code { color: #D8D8D6; background: #0E0F1F; } }
+.hljs-keyword { color: #F288AF; }
+.hljs-comment { color: #929CA6; }
+.hljs-string { color: #0594A6; }
+.hljs-title { color: #4581D9; }
+.hljs-type, .hljs-built_in { color: #fca311; }
+</style>
+</head>
+<body>
+<p>
+<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="w-类型-w-type">W 类型 (W Type)</h1>
+<h3 id="by-玩火">By 玩火</h3>
+<p>简单来说，W 类型是一种通用的编码 Dependent Inductive Type 的方式。</p>
+<h2 id="数据类型的归纳">数据类型的归纳</h2>
+<p>归纳构造数据是一种从简单构造器组合成整个对象的过程。比如列表就是由 <code>Nil</code> 和 <code>Cons</code> 两个构造器组合而成的：</p>
+<pre><code class="language-idris"><span class="hljs-keyword">data</span> List a = Nil | (::) a (List a)
+</code></pre>
+<p>而归纳构造的数据类型可以用结构归纳法证明其上的性质，比如对于 <code>List</code> 来说通用的证明就是：</p>
+<pre><code class="language-idris">indList : (P : List a -&gt; Type) -&gt; 
+    (P Nil) -&gt; 
+    ((x : a) -&gt; (xs : List a) -&gt; P xs -&gt; P (x :: xs)) -&gt; 
+    (xs : List a) -&gt; 
+    P xs
+indList _ nil cons Nil = nil
+indList p nil cons (x :: xs) = cons x xs (indList p nil cons xs)
+</code></pre>
+<p>这个 <code>indList</code> 中的 <code>P</code> 就是一个依赖于一个列表的命题，用非形式化的语言描述 <code>indList</code> 就是：如果对于空表来说该命题成立（存在 <code>P Nil</code>）且如果对于一个列表来说该命题成立（存在 <code>P xs</code>）那么对于多一个元素的该列表成立（存在 <code>P (x :: xs)</code>），此时可以得出结论，对于任意列表来说该命题成立（也就是 <code>(xs : List a) -&gt; P xs</code>）。</p>
+<blockquote>
+<p>明明 <code>P</code> 是个产生类型的函数，为什么说它是一个依赖于一个列表的命题呢？参考 <a href="https://magic.huohuo.moe/html/CHIso.html">Curry-Howard 同构</a></p>
+</blockquote>
+<h2 id="通用的归纳构造">通用的归纳构造</h2>
+<p>众所周知，归纳数据结构构造出的对象应当是有限的多叉树形结构（在通过 termination check 的情况下）。很显然，任意的归纳数据结构都存在一个多叉树的同构，那么其实仅仅使用通用的多叉树就可以构造出任意的归纳数据结构：</p>
+<pre><code class="language-idris"><span class="hljs-keyword">data</span> Ind : (a : Type) -&gt; (size : a -&gt; Nat) -&gt; Type <span class="hljs-keyword">where</span>
+    MkInd : (x : a) -&gt; Vect (size x) (Ind a size) -&gt; Ind a size
+</code></pre>
+<p>我们把所有的构造器的参数分成两部分，一部分是承载的数据，全部打包放在了 <code>x : a</code> 中，另一部分是子分支数组，被拆分出来放在了 <code>Vect (size x) (Ind a size)</code> 中</p>
+<p>这里举个 <code>Ind</code> 构造出 <code>List</code> 的例子：</p>
+<pre><code class="language-idris">listSize : (a : Type) -&gt; Maybe a -&gt; Nat
+listSize _ Nothing = 0
+listSize _ (Just _) = 1
+
+List&#x27; : Type -&gt; Type
+List&#x27; a = Ind (Maybe a) (listSize a)
+
+nil : List&#x27; a
+nil = MkInd Nothing Nil
+
+cons : a -&gt; List&#x27; a -&gt; List&#x27; a
+cons x xs = MkInd (Just x) (xs :: Nil)
+</code></pre>
+<p>和 <code>List</code> 一样，<code>Ind</code> 也有归纳性质：</p>
+<pre><code class="language-idris">indInd : (P : Ind a size -&gt; Type) -&gt;
+    ((x : a) -&gt; (v : Vect (size x) (Ind a size)) -&gt; ((i : Fin (size x)) -&gt; P (index i v)) -&gt; P (MkInd x v)) -&gt;
+    (n : Ind a size) -&gt;
+    P n
+indInd p f (MkInd x v) = f x v (\i =&gt; indInd p f (index i v))
+</code></pre>
+<p>相比 <code>List</code> 只需要一个后续节点的归纳结果， <code>Ind</code> 需要所有子树的归纳结果并组合起来，这里用了一个 <code>i</code> 来索引第 <code>i</code> 个子树归纳结果 <code>P (index i v)</code>。</p>
+<h2 id="w-类型">W 类型</h2>
+<p>上述 <code>Ind</code> 依赖 <code>Nat</code>, <code>Fin</code> 和 <code>Vect</code> 的实现，它们编码了子节点列表及其下标。而 W 类型就是在 <code>Ind</code> 的思想基础上用更基础的方式实现了前述的列表和下标的编码。为了做到这一点，得考虑更加底层的编码「数字」与「数组」的办法。而恰巧代数数据类型本身就蕴含着数量的概念，类型拥有的实例数量就可以看成是下标的数量上限，而每个具体实例可以看作是具体的下标，利用函数就可以把下标映射到各个分支上：</p>
+<pre><code class="language-idris"><span class="hljs-keyword">data</span> W : (a : Type) -&gt; (b : a -&gt; Type) -&gt; Type <span class="hljs-keyword">where</span>
+    Sup : (x : a) -&gt; (b x -&gt; W a b) -&gt; W a b
+</code></pre>
+<p>从某种角度上来说上述 <code>Ind</code> 中的 <code>Vect (size x) (Ind a size)</code> 的用途可以看作是 <code>Fin (size x) -&gt; Ind a size</code>，而这 <code>Fin (size x)</code> 某种程度上来说就是对 W 类型中 <code>b x</code> 的特化：</p>
+<pre><code class="language-idris">IndByW : (a : Type) -&gt; (a -&gt; Nat) -&gt; Type
+IndByW a size = W a (\x =&gt; Fin (size x))
+</code></pre>
+<p>参考 <code>Ind</code> 的归纳实现，可以很简单写出 W 类型的归纳实现：</p>
+<pre><code class="language-idris">indW : (P : W a b -&gt; Type) -&gt;
+    ((x : a) -&gt; (f : b x -&gt; W a b) -&gt; ((i : b x) -&gt; P (f i)) -&gt; P (Sup x f)) -&gt;
+    (n : W a b) -&gt;
+    P n
+indW p f (Sup x v) = f x v (\i =&gt; indW p f (v i))
+</code></pre>
+<p>和上面的 <code>Ind</code> 一样，这里举个用 W 类型构造 <code>List</code> 的例子：</p>
+<pre><code class="language-idris">listIndex : (a : Type) -&gt; (Maybe a) -&gt; Type
+listIndex _ Nothing = Void
+listIndex _ (Just x) = ()
+
+ListW : Type -&gt; Type
+ListW a = W (Maybe a) (listIndex a)
+
+nilW : ListW a
+nilW = Sup Nothing (\x =&gt; void x)
+
+consW : a -&gt; ListW a -&gt; ListW a
+consW x xs = Sup (Just x) (\_ =&gt; xs)
+</code></pre>
+<h2 id="有啥用？">有啥用？</h2>
+<p>我觉得学一样东西最重要的地方就是了解到它有啥用，为了了解到它有啥用会有更大的动力去研究和用途密切相关的它的形式与特性。在文章的开头提到它可以用来编码任意 Dependent Inductive Type ，而在研究类型论的时候想从啥也没有之中构造出任意 Dependent Inductive Type 的时候 W 类型就有非常大的优势。W 的类型定义就是它和它的实例的 Introduction Rules，而 <code>indW</code> 就是它的 Computation Rules。</p>
+<p>而在语言之外设计好这些 Rules 了以后想用它真的来编码类型还需要一些辅助类型，比如上面构造 <code>ListW</code> 所需要 <code>Maybe</code>, <code>Void</code> 和 <code>()</code> 类型。我们需要这些类型来承载数据和为分支提供索引，所幸的是这些类型并不需要归纳结构，所以只需要简单的 <code>Void</code>, <code>()</code>, <code>Bool</code> 外加 Dependent Pair 就可以编码了。比如 <code>Maybe</code> 就可以编码为：</p>
+<pre><code class="language-idris">Maybe&#x27; : Type -&gt; Type
+Maybe&#x27; a = (label : Bool ** <span class="hljs-keyword">case</span> label <span class="hljs-keyword">of</span> 
+    True =&gt; Void
+    False =&gt; a)
+</code></pre>
+<p>用 <code>True</code> 和 <code>False</code> 的序列为每个构造器命名，然后用 Dependent Pair 和 Bool 的 Elimination Rules 来把命名映射到构造器的具体参数类型上。</p>
+<blockquote>
+<p>Reference: </p>
+<p><a href="https://vinalx.github.io/articles/2019/03/w-type">Inductive type and W Type - VinaLx</a></p>
+</blockquote>
+</body>
+</html>

@@ -7,7 +7,7 @@ require("./marked-katex")(marked, katex)
 
 hljs.registerLanguage('idris', function(hljs) {
     return {
-        keywords: ['record', 'constructor', 'where', 'case', 'of'],
+        keywords: ['record', 'constructor', 'where', 'case', 'of', 'data', 'codata'],
         contains: []
     }
 })
