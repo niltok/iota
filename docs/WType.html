@@ -100,7 +100,7 @@ ListW : Type -&gt; Type
 ListW a = W (Maybe a) (listIndex a)
 
 nilW : ListW a
-nilW = Sup Nothing (\x =&gt; void x)
+nilW = Sup Nothing absurd
 
 consW : a -&gt; ListW a -&gt; ListW a
 consW x xs = Sup (Just x) (\_ =&gt; xs)
