@@ -1,0 +1,79 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>
+电梯杀手问题</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style>
+body { max-width: 650px; margin: auto; width: 90%; margin-top: 10%; margin-bottom: 10%; color: #0B0E26; background: #FAFAFC; line-height: 2em; font-variant-ligatures: common-ligatures discretionary-ligatures; -webkit-font-feature-settings: "liga" on, "calt" on; font-feature-settings: "liga" on, "calt" on; }
+body { font-size: 20px; font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif; }
+h1 { font-size: 2.5em; color: #EF96AB; line-height: 1.5em; }
+h2 { margin-top: 2em; line-height: 1.5em; }
+blockquote { color: gray; margin: 0; padding: 1 1 1 20; border-left: 5px solid #EF96AB; }
+code, pre { font-size: 0.9em; line-height: 1.8em; font-family: "JetBrains Mono","等距更纱黑体 SC","Fira Code",Menlo,Monaco,source-code-pro,Courier New,Consolas,monospace; background: #FCF6FC; border-radius: 3px; padding-inline: 0.3rem; }
+pre { overflow-x: auto; padding: 1rem; }
+pre>code { padding-inline: 0; }
+a { color: #02AEF1; text-decoration: none; }
+@media (prefers-color-scheme: dark) { body { color: #D8D8D6; background: #0E0E10; } }
+@media (prefers-color-scheme: dark) { pre, code { color: #D8D8D6; background: #0E0F1F; } }
+.hljs-keyword { color: #F288AF; }
+.hljs-comment { color: #929CA6; }
+.hljs-string { color: #0594A6; }
+.hljs-title { color: #4581D9; }
+.hljs-type, .hljs-built_in { color: #fca311; }
+</style>
+</head>
+<body>
+<p>
+<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="电梯杀手问题">电梯杀手问题</h1>
+<h3 id="玩火">玩火</h3>
+<blockquote>
+<p>和某人的聊天记录，其中<em>斜体为某人的话</em>，其余为玩火的话</p>
+<p>我是第一次听说这个问题，进行了一波现场推理</p>
+</blockquote>
+<h2 id="问题介绍">问题介绍</h2>
+<p><em>设想你在被人追杀，并逃进了一栋带电梯和楼梯的楼</em></p>
+<p><em>你正好在杀手到来前关上了电梯门</em></p>
+<p><em>现在你会采取什么行动才能活着从一楼重新离开</em></p>
+<p><em>这个问题大概是这样表述的</em></p>
+<h2 id="解题记录">解题记录</h2>
+<p>最简单的想法应该是需要给杀手一些misdirection吧，鉴于杀手应该已经按了电梯键，我在初始状态应该仅有一次从一楼到楼顶再回到一楼的活动时间</p>
+<p>能比较好做文章的大概就是电梯在每层楼的停留时间，但是如果引导杀手移动到比自己低的楼层那么电梯继续向上移动接自己的话再下来就会被杀手截获</p>
+<p>我忽然想到看到一堆乱七八糟的停留时间杀手是不是会从最底层往上地毯式搜索</p>
+<p>如果中途电梯移动了那么就可以守株待兔</p>
+<p><em>确实 极端点的杀手可以直接蹲在一楼不动</em></p>
+<p><em>所以可以加一个时间限制</em></p>
+<p>要是假设杀手只够去一个楼层可能会稍微有点希望</p>
+<p>不然一层一层扫我觉得应该无解</p>
+<p><em>确实</em></p>
+<p>那接下来就需要选一个靠谱的停留策略…</p>
+<p>我忽然想到一个问题</p>
+<p>当我从电梯走出来的时候，因为无法手动控制电梯的关门时间，那么最终情况应该是关门时间比超时关门时间要长，这样的话就算接下来的楼层全部按上它们的停留时间会恰巧等于超时关门时间</p>
+<p>如果杀手有秒表的话可以尝试记录下最后一次关门时间比超时关门时间长的楼层</p>
+<p>假设做不到其他物理手段离开电梯或者不能瞬间离开电梯那么似乎这个方案也无解</p>
+<p>接下来假设能瞬间离开电梯，那么按照之前的截获理论，杀手越往上层自己越往下层越安全，在杀手和自己都能料到这种情况的策略下双方会采取的行动应该会以双方利益平衡点也就是中间楼层为期望值的泊松分布</p>
+<p>接下来应该就是摇个符合该分布随机楼层去碰运气了</p>
+<p>我感觉我只能算到这一步了</p>
+<p>还是个挺有意思的问题</p>
+<p>这个泊松分布是我口胡的，看看能不能严格证明一下</p>
+<p>补充一点，这种情况下的停留分布应当是均匀的超时关门时间，不然必然会留下额外信息</p>
+<p><em>是的 不论多心急都不可以操作电梯开关门</em></p>
+<h2 id="一点后记">一点后记</h2>
+<p><em>我觉得我们的思考方式很像——至少结果是一样的</em></p>
+<p>我之前就这么觉得了</p>
+<p>本来我没想答这个问题的，但是写完第一段就思路停不下来了，一路推到这个结论上</p>
+<p><em>哈哈哈哈哈哈哈</em></p>
+<p>平时也会有乱七八糟的想法，但确实很少像这样冷静思考然后完整记录的（有时候还会想要不要买个录音笔把碎碎念记下来</p>
+<p><em>写日记呀2333</em></p>
+<p>那也太难了，还会减慢我的思维，我感觉我思维活跃的时候要是完整记录怕是一周就能产生一厚本意识流小说（要是人啥时候能一1kb/s的速度向计算机传输信息就好了</p>
+<p><em>大力研发脑机接口（不是</em></p>
+<p>诶 说来之前我说我很喜欢的自己写的两篇文章就是在思维极其活跃时期写的 两篇的篇幅都是在我看来比较离谱的（从没写过这么长的东西</p>
+<p><em>思维活跃的时候不多写写就会感觉浪费</em></p>
+<p>那倒是诶…看来我以前浪费了好多想法</p>
+<p><em>但是IO毕竟有限所以我只能挑重点记</em></p>
+<p>期待脑机接口</p>
+<p>我要把上面一长串想法记下来</p>
+</body>
+</html>
