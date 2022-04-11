@@ -96,7 +96,7 @@ function min<T extends Comparable<T>>(a: T, b: T): T {
 而精通 Typescript 的小伙伴肯定会想到，这里的 Best Practice 实际上是使用 `this` 类型：
 
 ```typescript
-type Comparable = {
+interface Comparable {
     compareTo(other: this): number
 }
 

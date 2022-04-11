@@ -98,7 +98,7 @@ a { color: #02AEF1; text-decoration: none; }
 <p>这样一来 <code>Comparable&lt;Num&gt;</code> 中的函数成员就是 <code>compareTo(other: Num)</code> ，和 <code>Num</code> 中的 <code>compareTo</code> 完美匹配。于是 <code>Num</code> 就是 <code>Comparable&lt;Num&gt;</code> 的子类型了，所以 <code>Num</code> 能满足 <code>min</code> 函数的类型参数中的 <code>T extends Comparable&lt;T&gt;</code> 约束，这样就可以通过类型检查了。</p>
 <p>这个 <code>T extends Comparable&lt;T&gt;</code> 看上去挺奇怪的，定义对 <code>T</code> 的约束中有对 <code>T</code> 的引用，但手工代入类型以后会发现它倒也能正常工作。这个非常有递归风味的约束就叫 F-Bounded Quantification。而利用该约束定义的多态，就叫 F-Bounded Polymorphism。</p>
 <p>而精通 Typescript 的小伙伴肯定会想到，这里的 Best Practice 实际上是使用 <code>this</code> 类型：</p>
-<pre><code class="language-typescript"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Comparable</span> = {
+<pre><code class="language-typescript"><span class="hljs-keyword">interface</span> <span class="hljs-title class_">Comparable</span> {
     <span class="hljs-title function_">compareTo</span>(<span class="hljs-attr">other</span>: <span class="hljs-variable language_">this</span>): <span class="hljs-built_in">number</span>
 }
 
