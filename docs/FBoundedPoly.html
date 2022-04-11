@@ -1,0 +1,132 @@
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title>
+F-Bounded Polymorphism</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style>
+body { max-width: 650px; margin: auto; width: 90%; margin-top: 10%; margin-bottom: 10%; color: #0B0E26; background: #FAFAFC; line-height: 2em; font-variant-ligatures: common-ligatures; -webkit-font-feature-settings: "liga" on, "calt" on; font-feature-settings: "liga" on, "calt" on; }
+body { font-size: 20px; font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif; }
+h1 { font-size: 2.5em; color: #EF96AB; line-height: 1.5em; }
+h2 { margin-top: 2em; line-height: 1.5em; }
+blockquote { color: gray; margin: 0; padding: 1 1 1 20; border-left: 5px solid #EF96AB; }
+code, pre { font-size: 0.9em; line-height: 1.8em; font-family: "JetBrains Mono","等距更纱黑体 SC","Fira Code",Menlo,Monaco,source-code-pro,Courier New,Consolas,monospace; background: #FCF6FC; border-radius: 3px; padding-inline: 0.3rem; }
+pre { overflow-x: auto; padding: 1rem; }
+pre>code { padding-inline: 0; }
+a { color: #02AEF1; text-decoration: none; }
+@media (prefers-color-scheme: dark) { body { color: #D8D8D6; background: #0E0E10; } }
+@media (prefers-color-scheme: dark) { pre, code { color: #D8D8D6; background: #0E0F1F; } }
+.hljs-keyword { color: #F288AF; }
+.hljs-comment { color: #929CA6; }
+.hljs-string { color: #0594A6; }
+.hljs-title { color: #4581D9; }
+.hljs-type, .hljs-built_in { color: #fca311; }
+</style>
+</head>
+<body>
+<p>
+<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="f-bounded-polymorphism">F-Bounded Polymorphism</h1>
+<blockquote>
+<p>前言，在很久以前的某一天，我在魔法店水群，看到有人提到 F-Bounded Polymorphism，于是去搜索引擎找到了 <a href="https://blog.lishunyang.com/2020/09/f-bounded-polymorphism.html">这篇文章</a> 。读完以后感觉挺有趣的就分享到了群里，不过群里人读完产生的疑惑似乎我也不知道怎么解答。于是这两天去读了 <a href="http://staff.ustc.edu.cn/~xyfeng/teaching/FOPL/lectureNotes/CookFBound89.pdf">原论文</a>，结果发现那篇网文对 F-Bounded Polymorphism 的理解似乎有一些偏差……</p>
+</blockquote>
+<h2 id="背景">背景</h2>
+<p>快速地描述一下形式化面向对象模型：</p>
+<h3 id="record-子类型">Record 子类型</h3>
+<pre><code class="language-typescript"><span class="hljs-keyword">type</span> A = {
+    <span class="hljs-attr">x_1</span>: <span class="hljs-variable constant_">X_1</span>,
+    <span class="hljs-attr">x_2</span>: <span class="hljs-variable constant_">X_2</span>,
+    ...
+    <span class="hljs-attr">x_n</span>: X_n
+}
+
+<span class="hljs-keyword">type</span> B = {
+    <span class="hljs-attr">y_1</span>: <span class="hljs-variable constant_">Y_1</span>,
+    <span class="hljs-attr">y_2</span>: <span class="hljs-variable constant_">Y_2</span>,
+    ...
+    <span class="hljs-attr">y_n</span>: Y_n,
+    ...
+    <span class="hljs-attr">y_m</span>: Y_m
+}
+</code></pre>
+<p>当对于 <code>i</code> 等于 <code>1</code> 到 <code>n</code> 来说 <code>Y_i</code> 都是 <code>X_i</code> 的子类型时，就可以把 <code>B</code> 当作 <code>A</code> 的子类型。</p>
+<h3 id="函数子类型">函数子类型</h3>
+<pre><code class="language-typescript"><span class="hljs-keyword">type</span> <span class="hljs-variable constant_">F1</span> = <span class="hljs-function">(<span class="hljs-params">x: X1</span>) =&gt;</span> <span class="hljs-variable constant_">Y1</span>
+
+<span class="hljs-keyword">type</span> <span class="hljs-variable constant_">F2</span> = <span class="hljs-function">(<span class="hljs-params">x: X2</span>) =&gt;</span> <span class="hljs-variable constant_">Y2</span>
+</code></pre>
+<p>当 <code>Y2</code> 是 <code>Y1</code> 的子类型且 <code>X1</code> 是 <code>X2</code> 的子类型时， <code>F2</code> 就是 <code>F1</code> 的子类型。因为 <code>F2</code> 想替代 <code>F1</code> 的话需要接收 <code>X2</code>。</p>
+<blockquote>
+<p>有疑问的话可以去看看协变与逆变相关知识。</p>
+</blockquote>
+<h3 id="带约束泛型">带约束泛型</h3>
+<pre><code class="language-typescript"><span class="hljs-keyword">type</span> F&lt;T <span class="hljs-keyword">extends</span> A&gt; = <span class="hljs-function">(<span class="hljs-params">x: T</span>) =&gt;</span> Y
+</code></pre>
+<p>泛型参数 <code>T</code> 必须是 <code>A</code> 的子类型。</p>
+<h2 id="碰到的问题">碰到的问题</h2>
+<p>举个例子：</p>
+<pre><code class="language-typescript"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Comparable</span> = {
+    <span class="hljs-title function_">compareTo</span>(<span class="hljs-attr">other</span>: <span class="hljs-title class_">Comparable</span>): <span class="hljs-built_in">number</span>
+}
+
+<span class="hljs-keyword">type</span> <span class="hljs-title class_">Num</span> = {
+    <span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>,
+    <span class="hljs-title function_">compareTo</span>(<span class="hljs-attr">other</span>: <span class="hljs-title class_">Num</span>): <span class="hljs-built_in">number</span>
+}
+
+<span class="hljs-keyword">function</span> min&lt;T <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Comparable</span>&gt;(<span class="hljs-attr">a</span>: T, <span class="hljs-attr">b</span>: T): T {
+    <span class="hljs-keyword">return</span> (a.<span class="hljs-title function_">compareTo</span>(b) &lt; <span class="hljs-number">0</span>) ? a : b
+}
+</code></pre>
+<p>按照人类的直觉来说 <code>Num</code> 应该是 <code>Comparable</code> 的子类型，可以用于 <code>min</code> 的参数，甚至连 Typescript 编译器都认为这是对的，但是手动做下类型检查就会发现问题所在：</p>
+<p>如果 <code>Num</code> 是 <code>Comparable</code> 的子类型，那么 <code>compareTo(other: Num)</code> 就是 <code>compareTo(other: Comparable)</code> 的子类型。所以按照函数参数逆变的规则，<code>Comparable</code> 应该是 <code>Num</code> 的子类型。这就会和我们先前的假设矛盾。</p>
+<blockquote>
+<p>Typescript 编译器认为这是对的，听上去挺奇怪，毕竟在 Typescript 中函数参数逆变是严格检查的，然而我准备提 Issue 的时候发现这是个常见被认为是 Bug 的行为。实际上这个问题在 2017 年函数参数逆变检查功能被实现的时候就有所考虑，如果严格检查方法参数逆变的话对当时泛型库会产生严重的兼容性问题所以被当成特例处理了。</p>
+<p>Reference: <a href="https://github.com/microsoft/TypeScript/pull/18654">Typescript#18654</a></p>
+</blockquote>
+<h2 id="f-bounded-polymorphism-1">F-Bounded Polymorphism</h2>
+<p>熟悉 Java 的小伙伴可能会说：「Java 里的 Comparable 可不是这么定义的！」</p>
+<pre><code class="language-typescript"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Comparable</span>&lt;T&gt; = {
+    <span class="hljs-title function_">compareTo</span>(<span class="hljs-attr">other</span>: T): <span class="hljs-built_in">number</span>
+}
+
+<span class="hljs-keyword">function</span> min&lt;T <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Comparable</span>&lt;T&gt;&gt;(<span class="hljs-attr">a</span>: T, <span class="hljs-attr">b</span>: T): T {
+    <span class="hljs-keyword">return</span> (a.<span class="hljs-title function_">compareTo</span>(b) &lt; <span class="hljs-number">0</span>) ? a : b
+}
+</code></pre>
+<p>这样一来 <code>Comparable&lt;Num&gt;</code> 中的函数成员就是 <code>compareTo(other: Num)</code> ，和 <code>Num</code> 中的 <code>compareTo</code> 完美匹配。于是 <code>Num</code> 就是 <code>Comparable&lt;Num&gt;</code> 的子类型了，所以 <code>Num</code> 能满足 <code>min</code> 函数的类型参数中的 <code>T extends Comparable&lt;T&gt;</code> 约束，这样就可以通过类型检查了。</p>
+<p>这个 <code>T extends Comparable&lt;T&gt;</code> 看上去挺奇怪的，定义对 <code>T</code> 的约束中有对 <code>T</code> 的引用，但手工代入类型以后会发现它倒也能正常工作。这个非常有递归风味的约束就叫 F-Bounded Quantification。而利用该约束定义的多态，就叫 F-Bounded Polymorphism。</p>
+<p>而精通 Typescript 的小伙伴肯定会想到，这里的 Best Practice 实际上是使用 <code>this</code> 类型：</p>
+<pre><code class="language-typescript"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Comparable</span> = {
+    <span class="hljs-title function_">compareTo</span>(<span class="hljs-attr">other</span>: <span class="hljs-variable language_">this</span>): <span class="hljs-built_in">number</span>
+}
+
+<span class="hljs-keyword">function</span> min&lt;T <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Comparable</span>&gt;(<span class="hljs-attr">a</span>: T, <span class="hljs-attr">b</span>: T): T {
+    <span class="hljs-keyword">return</span> (a.<span class="hljs-title function_">compareTo</span>(b) &lt; <span class="hljs-number">0</span>) ? a : b
+}
+</code></pre>
+<p>这实际上就是 Typescript 中 F-Bounded Polymorphism 的语法糖。</p>
+<p>至于在 Java 中，这一操作也被标准库大量使用，最为常见的便是 <code>Comparable</code> 接口：</p>
+<pre><code class="language-java"><span class="hljs-keyword">interface</span> <span class="hljs-title class_">Comparable</span>&lt;T&gt; {
+    <span class="hljs-type">int</span> <span class="hljs-title function_">compareTo</span><span class="hljs-params">(T other)</span>;
+}
+
+<span class="hljs-keyword">class</span> <span class="hljs-title class_">Num</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Comparable</span>&lt;Num&gt; {
+    <span class="hljs-type">int</span> value;
+    <span class="hljs-type">int</span> <span class="hljs-title function_">compareTo</span><span class="hljs-params">(Num other)</span> {
+        <span class="hljs-keyword">return</span> value - other.value;
+    }
+    <span class="hljs-keyword">static</span> &lt;T <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Comparable</span>&lt;T&gt;&gt; T <span class="hljs-title function_">min</span><span class="hljs-params">(T a, T b)</span> {
+        <span class="hljs-keyword">return</span> (a.compareTo(b) &lt; <span class="hljs-number">0</span>) ? a : b;
+    }
+}
+</code></pre>
+<p>类似的还有 C++ 中的 CRTP。</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="什莫事-f">什莫事 &quot;F&quot;</h3>
+<p>原论文中定义 F-Bounded Quantification 的时候用了 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∀</mi><mi>t</mi><mo>⊆</mo><mi>F</mi><mo stretchy="false">[</mo><mi>t</mi><mo stretchy="false">]</mo><mi mathvariant="normal">.</mi><mi>σ</mi></mrow><annotation encoding="application/x-tex">\forall t \sube F[t]. \sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8304em;vertical-align:-0.136em;"></span><span class="mord">∀</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⊆</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="mopen">[</span><span class="mord mathnormal">t</span><span class="mclose">]</span><span class="mord">.</span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 其中的 t 就是作为参数的子类型，而 F 就是有着子类型 <code>t</code> 作为泛型参数的父类型，就比如上面举例子用的 <code>T extends Comparable&lt;T&gt;</code>。<strong>注意 F 并不是那篇网文中所说的那样为一个函数！</strong></p>
+<h3 id="先有鸡还是先有蛋">先有鸡还是先有蛋</h3>
+<p>在 <code>T extends F&lt;T&gt;</code> 中，只有 <code>F</code> 是 free 的，所以必然是先有 <code>F</code> 再有 F-Bounded Quantification。不过对于具体的作为子类型的 <code>T</code> 来说，倒是要看类型系统对继承的要求了。像 Typescript 这种 structural typing 并不在意先定义接口还是子类型，但像 Java 那种 nominal typing 就会要求继承时给定接口，所以需要先定义接口。</p>
+</body>
+</html>

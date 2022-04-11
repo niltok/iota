@@ -16,5 +16,8 @@
     },
     "ElevatorKiller.md": {
         "title": "电梯杀手问题"
+    },
+    "FBoundedPoly.md": {
+        "title": "F-Bounded Polymorphism"
     }
 }

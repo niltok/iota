@@ -8,6 +8,8 @@
 
 ## 2022
 
+[F-Bounded Polymorphism](FBoundedPoly.html)
+
 [电梯杀手问题](ElevatorKiller.html)
 
 [W 类型 (W Type)](WType.html)
