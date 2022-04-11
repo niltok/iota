@@ -56,7 +56,7 @@ a { color: #02AEF1; text-decoration: none; }
 
 <span class="hljs-keyword">type</span> <span class="hljs-variable constant_">F2</span> = <span class="hljs-function">(<span class="hljs-params">x: X2</span>) =&gt;</span> <span class="hljs-variable constant_">Y2</span>
 </code></pre>
-<p>当 <code>Y2</code> 是 <code>Y1</code> 的子类型且 <code>X1</code> 是 <code>X2</code> 的子类型时， <code>F2</code> 就是 <code>F1</code> 的子类型。因为 <code>F2</code> 想替代 <code>F1</code> 的话需要接收 <code>X2</code>。</p>
+<p>当 <code>Y2</code> 是 <code>Y1</code> 的子类型且 <code>X1</code> 是 <code>X2</code> 的子类型时， <code>F2</code> 就是 <code>F1</code> 的子类型。因为 <code>F2</code> 想替代 <code>F1</code> 的话需要接收能替代 <code>X2</code> 的 <code>X1</code> 并返回能替代 <code>Y1</code> 的 <code>Y2</code>，这样才能保证信息在流动的时候只会变少不会变多。</p>
 <blockquote>
 <p>有疑问的话可以去看看协变与逆变相关知识。</p>
 </blockquote>
