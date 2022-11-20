@@ -1,7 +1,7 @@
 
 # 点菜数据类型 (Data types à la carte)
 
-> 本文是 [这篇论文](https://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf) 的粗略科普，一些比较细节的地方还是建议去读原文了解。
+> 本文是 [这篇论文](https://www.cambridge.org/core/journals/journal-of-functional-programming/article/data-types-a-la-carte/14416CB20C4637164EA9F77097909409#) 的粗略科普，一些比较细节的地方还是建议去读原文了解。
 
 ## Expression problem
 
@@ -424,4 +424,4 @@ cat fp = do
 
 ### 在其他语言中的运用
 
-我写之前在网上搜了搜看看有没有别的人写过翻译，结果发现了一个 [奇妙的仓库](https://github.com/jcouyang/alacarte/wiki/%E8%AF%BB%E6%88%91) ，作者把点菜数据类型搬到 JavaScript 里面了，还为它实现了一个运行时的注入检查。感觉非常离谱。不过由于存在 Overlapping Instances 的存在，目测主流语言里也就 C++ 能原生在编译期做到注入检查。
+我写之前在网上搜了搜看看有没有别的人写过翻译，结果发现了一个 [奇妙的仓库](https://github.com/jcouyang/alacarte/wiki/%E8%AF%BB%E6%88%91) ，作者把点菜数据类型搬到 JavaScript 里面了，还为它实现了一个运行时的注入检查。感觉非常离谱。不过由于 Overlapping Instances 的存在，目测主流语言里也就 C++ 能原生在编译期做到注入检查。

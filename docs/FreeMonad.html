@@ -121,7 +121,7 @@ a {
 <a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
 <h1 id="点菜数据类型-data-types-à-la-carte">点菜数据类型 (Data types à la carte)</h1>
 <blockquote>
-<p>本文是 <a href="https://www.cs.ru.nl/~W.Swierstra/Publications/DataTypesALaCarte.pdf">这篇论文</a> 的粗略科普，一些比较细节的地方还是建议去读原文了解。</p>
+<p>本文是 <a href="https://www.cambridge.org/core/journals/journal-of-functional-programming/article/data-types-a-la-carte/14416CB20C4637164EA9F77097909409#">这篇论文</a> 的粗略科普，一些比较细节的地方还是建议去读原文了解。</p>
 </blockquote>
 <h2 id="expression-problem">Expression problem</h2>
 <p>在 Haskell 中实现一个简单的运算解释器是件很容易的事情：</p>
@@ -438,6 +438,6 @@ a {
 <h3 id="关于-free-monad">关于 Free Monad</h3>
 <p>由于 <code>Impure</code> 的递归性质，只要给出合适的 <code>f</code>，实际上它能构造出任意形状的结构，但是为了保证 Monad 性质而存在的 <code>Pure</code> 使 Free Monad 不能和一些 Monad 完美匹配，比如文中提到的 <code>data [a] = Nil | a : [a]</code> 就不存在和 <code>Pure a</code> 类似的构造器。不过由于完备的 <code>Impure</code> 的存在，所有 ADT 都能嵌入到 Free Monad 当中。所以尽管不是所有的 Monad 都是 Free Monad，但 Free Monad 总能实现它们的实际功能。这事就有点类似于经典逻辑能嵌入到直觉主义逻辑，就我个人觉得直接拿更「大」的系统用也没啥问题。</p>
 <h3 id="在其他语言中的运用">在其他语言中的运用</h3>
-<p>我写之前在网上搜了搜看看有没有别的人写过翻译，结果发现了一个 <a href="https://github.com/jcouyang/alacarte/wiki/%E8%AF%BB%E6%88%91">奇妙的仓库</a> ，作者把点菜数据类型搬到 JavaScript 里面了，还为它实现了一个运行时的注入检查。感觉非常离谱。不过由于存在 Overlapping Instances 的存在，目测主流语言里也就 C++ 能原生在编译期做到注入检查。</p>
+<p>我写之前在网上搜了搜看看有没有别的人写过翻译，结果发现了一个 <a href="https://github.com/jcouyang/alacarte/wiki/%E8%AF%BB%E6%88%91">奇妙的仓库</a> ，作者把点菜数据类型搬到 JavaScript 里面了，还为它实现了一个运行时的注入检查。感觉非常离谱。不过由于 Overlapping Instances 的存在，目测主流语言里也就 C++ 能原生在编译期做到注入检查。</p>
 </body>
 </html>
