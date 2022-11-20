@@ -1,11 +1,3 @@
-<html>
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-<title>
-「玩火」的便利贴</title>
-<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style>
 body {
     max-width: 650px;
     margin: auto;
@@ -114,24 +106,4 @@ a {
 .hljs-type,
 .hljs-built_in {
     color: #fca311;
-}</style>
-</head>
-<body>
-<p>
-<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
-<h1 id="「玩火」的便利贴">「玩火」的便利贴</h1>
-<blockquote>
-<p>记录了「玩火」胡思乱想的纸条，没有一句是可信的</p>
-</blockquote>
-<h2 id="系列">系列</h2>
-<p><a href="https://magic.huohuo.moe">十分钟魔法练习</a></p>
-<h2 id="2022">2022</h2>
-<p><a href="FBoundedPoly.html">F-Bounded Polymorphism</a></p>
-<p><a href="ElevatorKiller.html">电梯杀手问题</a></p>
-<p><a href="WType.html">W 类型 (W Type)</a></p>
-<p><a href="FreeMonad.html">点菜数据类型 (Data types à la carte)</a></p>
-<h2 id="2021">2021</h2>
-<p><a href="LEM.html">直觉主义逻辑中的排中律</a></p>
-<p><a href="OO-in-C.html">C 语言中的面向对象</a></p>
-</body>
-</html>
+}

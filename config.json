@@ -19,5 +19,8 @@
     },
     "FBoundedPoly.md": {
         "title": "F-Bounded Polymorphism"
+    },
+    "8051ForCoder.md": {
+        "title": "写给程序员的 8051 汇编指北"
     }
 }
