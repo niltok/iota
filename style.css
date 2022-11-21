@@ -7,9 +7,7 @@ body {
     color: #0B0E26;
     background: #FAFAFC;
     line-height: 2em;
-    font-variant-ligatures: common-ligatures;
-    -webkit-font-feature-settings: "liga" on, "calt" on;
-    font-feature-settings: "liga" on, "calt" on;
+    text-rendering: optimizeLegibility;
 }
 
 body {
@@ -37,7 +35,7 @@ h3 {
 blockquote {
     color: gray;
     margin: 0;
-    padding: 1 1 1 20;
+    padding: 1px 1px 1px 20px;
     border-left: 5px solid #EF96AB;
 }
 

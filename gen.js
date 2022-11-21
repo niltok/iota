@@ -12,7 +12,32 @@ hljs.registerLanguage('idris', function(hljs) {
     }
 })
 
-const $$ = label => s => '<' + label + '>\n' + s + '</' + label + '>\n'
+hljs.registerLanguage('51asm', function(hljs) {
+    return {
+        case_insensitive: true,
+        contains: [
+            hljs.COMMENT(';', '\n'),
+            {
+                scope: 'built_in',
+                match: /\b(a|b|c|ab|dptr|r[0-7]|p[0-7](\.[0-7])?|acc(.[0-7])?|scon|sbuf)\b/
+            },
+            {
+                scope: 'keyword',
+                match: /^\s*[a-z]+\s/
+            },
+            {
+                scope: 'title',
+                match: /((\b)(([0-1]+b)|([0-9][0-9a-f]*h)|[0-9]+))/
+            },
+            {
+                scope: 'string',
+                match: /(((#)(([0-1]+b)|([0-9][0-9a-f]*h)|[0-9]+)\b)|(@|\+|:))/ // (r[0-7]|dptr(\s*\+\s*a)?|pc\s*\+\s*a|a\s*\+\s*(dptr|pc))
+            }
+        ]
+    }
+})
+
+const $$ = (label, attr = '') => s => '<' + label + ' ' + attr + '>\n' + s + '</' + label + '>\n'
 
 const config = JSON.parse(fs.readFileSync('config.json').toString())
 const style = $$('style')(fs.readFileSync('style.css'))
@@ -23,7 +48,8 @@ if (fs.existsSync("docs")) fs.readdirSync("docs").forEach(f => {
 else fs.mkdirSync("docs")
 
 const charset = '<meta charset="utf-8"/>\n'
-const viewpoint = '<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=0">\n'
+const compat = '<meta http-equiv="x-ua-compatible" content="ie=edge">\n'
+const viewpoint = '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
 const icon = '<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">\n'
 const title = conf => $$('title')(conf.title)
 
@@ -31,13 +57,14 @@ const hljscss = '<link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/10.3
 const materialize = '<link href="https://cdn.bootcdn.net/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css" rel="stylesheet">'
 const katexcss = '<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet">'
 
-const head = conf => $$('head')(charset + viewpoint + icon + title(conf) + katexcss + style)
+const head = conf => $$('head')(charset + compat + viewpoint + icon + title(conf) + katexcss + style)
 
 const github = '<a href="https://github.com/niltok">🔥GitHub🔥</a>'
 const home = '<a href="https://iota.huohuo.moe">🏠Homepage🏠</a>'
 
 const gen = conf => s => {
-    return $$('html')(head(conf) + $$('body')($$('p')(home + ' | ' + github) +
+    return '<!DOCTYPE html>' + $$('html', 'lang="zh-CN" prefix="og: https://ogp.me/ns#"')
+    (head(conf) + $$('body')($$('p')(home + ' | ' + github) +
         marked.marked(s, {
             highlight: (code, lang) => {
                 if (typeof lang == 'undefined' || lang == '')
