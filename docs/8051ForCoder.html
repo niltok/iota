@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="zh-CN" prefix="og: https://ogp.me/ns#">
+<head >
+<meta charset="utf-8"/>
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title >
+写给程序员的 8051 汇编指北</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style >
+body {
+    max-width: 35em;
+    margin: auto;
+    width: 90%;
+    margin-top: 10%;
+    margin-bottom: 10%;
+    color: #0B0E26;
+    background: #FAFAFC;
+    line-height: 2em;
+    text-rendering: optimizeLegibility;
+    text-align: justify;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: calc(min(.35vw + 16px, 25px));
+    font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #EF96AB;
+    line-height: 1.5em;
+}
+
+h2 {
+    margin-top: 2rem;
+    line-height: 1.5em;
+}
+
+h1,
+h2,
+h3 {
+    /* text-align: center; */
+}
+
+blockquote {
+    color: gray;
+    margin: 0;
+    padding: 1px 0 1px 1.2em;
+    border-left: .3em solid #EF96AB;
+}
+
+code,
+pre {
+    font-size: 0.9rem;
+    line-height: 1.8em;
+    font-family: "JetBrains Mono", "等距更纱黑体 SC", "Fira Code", Menlo, Monaco, source-code-pro, Courier New, Consolas, monospace;
+    background: #FCF6FC;
+    border-radius: 3px;
+    padding-inline: 0.3em;
+}
+
+pre {
+    overflow-x: auto;
+    padding: 1em 1.5em;
+}
+
+pre>code {
+    padding-inline: 0;
+}
+
+::-webkit-scrollbar,
+.element::-webkit-scrollbar,
+.element {
+    /* opacity: 0.5; */
+}
+
+a {
+    color: #02AEF1;
+    text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #D8D8D6;
+        background: #0E0E10;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+
+    pre,
+    code {
+        color: #D8D8D6;
+        background: #0E0F1F;
+    }
+}
+
+.hljs-keyword {
+    color: #F288AF;
+}
+
+.hljs-comment {
+    color: #929CA6;
+}
+
+.hljs-string {
+    color: #0594A6;
+}
+
+.hljs-title {
+    color: #4581D9;
+}
+
+.hljs-type,
+.hljs-built_in {
+    color: #fca311;
+}</style>
+</head>
+<body >
+<p >
+<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="写给程序员的-8051-汇编指北🧭">写给程序员的 8051 汇编指北🧭</h1>
+<p>写完漫无止境的单片机作业我以后有了巨量心得（都是血的教训啊），所以想写点东西总结一下。目前网上目前的教程基本都是面向对计算机没什么了解的人，普遍侧重于实例的教学，而这篇文章主要从程序员的角度出发考虑 8051 单片机的软硬件设计以及其程序的编写思路。阅读本文并不需要很多知识，除了掌握任意语言的程序编写以外只需要懂一些数字电路知识就好。</p>
+<blockquote>
+<p>为什么叫「指北」呢？实际上我也不太想写一个事无巨细的「指南」，毕竟很多东西有人写过了，只需要给读者一个链接作为补充就可以。而很多写实验的心得是网上都没见过的，那些是我真的想记录下来的内容。</p>
+</blockquote>
+<h2 id="汇编程序的组织结构">汇编程序的组织结构</h2>
+<blockquote>
+<p>如果熟悉任何一种指令集上的汇编可以跳过本节，直接进入 <a href="#%E6%8C%87%E4%BB%A4%E9%9B%86%E4%B8%8E%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E8%AE%BE%E8%AE%A1">我的血泪史</a> 环节</p>
+</blockquote>
+<p>众所周知，程序是由控制流操作和数据操作组成的，前者包括顺分支判断、循环、函数调用等，后者呢则包括算术运算、逻辑运算、赋值操作等。而汇编也是一样，只不过相比于常见编程语言来说使用的记号非常的……抽象……比 Linux 中的各种缩写还要抽象。比如赋值操作通常被称为 <code>mov</code>，而它其实是 move 的缩写。而我们在 C 中所见过的 goto 语句通常被称作 <code>jmp</code>， 是 jump 的缩写。了解了其命名规则后，在阅读代码时就可以先通过缩写猜测一下指令的意思，如果有困惑再去查表，写代码时也可以帮助记忆。</p>
+<blockquote>
+<p>在国内的汇编资料中 <code>mov</code> 常被称为「传送语句」，这里为了方便理解用了程序员常用的「赋值语句」</p>
+</blockquote>
+<p>顺便这里给出一份 <a href="https://www.keil.com/support/man/docs/is51/is51_opcodes.htm">8051 的指令集</a>，方便读者在读后文时查阅。至于阅读方法嘛……表格中每一行就是一条指令，第三列是指令的名字，第四列是参数格式。最终指令写出来的格式就是名字加上参数，比如这些例子与对于的 C 语言说明：</p>
+<pre><code class="language-51asm"><span class="hljs-comment">; 用分号表示行注释
+</span><span class="hljs-keyword">add </span><span class="hljs-built_in">a</span>, <span class="hljs-string">#30H</span>  <span class="hljs-comment">; a += 0x30
+</span><span class="hljs-keyword">add </span><span class="hljs-built_in">a</span>, <span class="hljs-title">30H</span>   <span class="hljs-comment">; a += *((int*)0x30)  // 直接寻址
+</span><span class="hljs-keyword">add </span><span class="hljs-built_in">a</span>, <span class="hljs-built_in">r0</span>    <span class="hljs-comment">; a += r0
+</span><span class="hljs-keyword">add </span><span class="hljs-built_in">a</span>, <span class="hljs-string">@</span><span class="hljs-built_in">r0</span>   <span class="hljs-comment">; a += *r0            // 间接寻址
+</span><span class="hljs-comment">; 汇编和 sql 语言、basic 语言一样不区分大小写</span>
+</code></pre>
+<p>参数格式中的逗号用来分隔参数，direct 表示可以填一个内存的地址，immed 表示可以填入字面量数据（比如十进制数字 <code>10</code>, 二进制数字 <code>0101B</code>, 十六进制数字 <code>0FH</code>, 字符 <code>&#39;?&#39;</code>），offset 和 addr 可以填入自定义的跳转标签， bit 可以填入一个可按位访问字节的其中一位（比如寄存器 A 的最低位 <code>acc.0</code>， p0 的最高位 <code>p0.7</code>），其他的内容原封不动抄上即可。具体解释 <a href="https://www.keil.com/support/man/docs/is51/is51_instructions.htm">这里</a> 也有。</p>
+<p>好，回到上文讨论的控制流操作和数据操作之上。
+数据操作比较简单，和常见变成语言的操作没啥区别，多看看表就行。
+比较有趣的是控制流操作，汇编中并没有块结构，只能通过跳转指令规划控制流，所以在常用编程语言里常见的控制流结构在汇编中一般是由一组语句构成的，这里给出一些常见的对应思路：</p>
+<pre><code class="language-51asm"><span class="hljs-comment">; do { ... } while(a) 结构，因为简单倒是最常用的
+</span>doWhileStart<span class="hljs-string">:</span> <span class="hljs-comment">; 定义跳转标签
+</span><span class="hljs-comment">; ...代码块
+</span><span class="hljs-keyword">jnz </span>doWhileStart <span class="hljs-comment">; 如果 a 不是 0 则跳转至 doWhileStart
+</span>
+<span class="hljs-comment">; if (a) { ... } else { ... } 结构，可以根据需要裁剪分支
+</span><span class="hljs-keyword">jz </span>ifElse <span class="hljs-comment">; 如果 a 为 0 跳转
+</span><span class="hljs-comment">; ...代码块A
+</span><span class="hljs-keyword">sjmp </span>ifEnd <span class="hljs-comment">; 无条件跳转（s 是 short 的缩写）
+</span>ifElse<span class="hljs-string">:</span>
+<span class="hljs-comment">; ...代码块 B
+</span>ifEnd<span class="hljs-string">:</span>
+
+<span class="hljs-comment">; for (a = 0; a != 4; a++) { ... } ，可以通过裁剪变成 while (a) { ... }
+</span><span class="hljs-keyword">mov </span><span class="hljs-built_in">a</span>, <span class="hljs-string">#0</span>
+forStart<span class="hljs-string">:</span>
+<span class="hljs-keyword">cjne </span><span class="hljs-built_in">a</span>, <span class="hljs-string">#4</span>, forEnd <span class="hljs-comment">; Compare and Jump if Not Equal 的缩写
+</span><span class="hljs-comment">; ...代码块
+</span><span class="hljs-comment">; 如果想 break 可以 sjmp forEnd，如果想 continue 可以 sjmp forStart
+</span><span class="hljs-keyword">inc </span><span class="hljs-built_in">a</span> <span class="hljs-comment">; increase
+</span><span class="hljs-keyword">sjmp </span>forStart
+forEnd<span class="hljs-string">:</span>
+</code></pre>
+<p>函数调用在汇编中比较特殊，当执行到 <code>lcall</code> 时，当前运行的指令位置被压入调用栈中并跳转到标签位置继续运行，当执行到 <code>ret</code> 时，从栈顶取出调用方的地址并跳过去。而且在 <code>lcall</code> 执行的时候并不会修改寄存器的内容，所以通过寄存器传递参数是很常见的选择。</p>
+<pre><code class="language-51asm"><span class="hljs-comment">; double(2);
+</span><span class="hljs-keyword">mov </span><span class="hljs-built_in">a</span>, <span class="hljs-string">#2</span>
+<span class="hljs-keyword">lcall </span>double
+
+<span class="hljs-comment">; int double(int a) { return a + a; }
+</span>double<span class="hljs-string">:</span>
+<span class="hljs-keyword">mov </span><span class="hljs-built_in">r0</span>, <span class="hljs-built_in">a</span>
+<span class="hljs-keyword">add </span><span class="hljs-built_in">a</span>, <span class="hljs-built_in">r0</span>
+ret
+</code></pre>
+<p>由于从任何一个标签开始一直到第一个被执行到的 <code>ret</code> 指令之间都是函数体，所以可以有函数被调用了以后先干一点初始化操作再从函数的中央开始切一半下来递归。不过这种操作有点复杂这里就不举例子了。</p>
+<p>而一个汇编程序的基本结构就是：</p>
+<pre><code class="language-51asm"><span class="hljs-keyword">org </span><span class="hljs-title">00H</span> <span class="hljs-comment">; 代码摆放位置
+</span><span class="hljs-keyword">ljmp </span>init
+<span class="hljs-keyword">
+org </span><span class="hljs-title">30H</span>
+init<span class="hljs-string">:</span>
+<span class="hljs-comment">; 初始化程序
+</span>start<span class="hljs-string">:</span>
+<span class="hljs-comment">; 循环工作
+</span><span class="hljs-keyword">sjmp </span>start
+
+<span class="hljs-comment">; 自定义函数
+</span>
+end
+</code></pre>
+<p>单片机上电以后就会从地址 0 开始一直不停执行代码，而上面把主程序放在地址 30H 并从地址 0 跳转过去是因为中间这段地址会被作为中断程序的入口。</p>
+<h2 id="指令集与地址空间设计">指令集与地址空间设计</h2>
+<p>我相信有对 x86 汇编稍有了解的读者像我一样在才开始尝试写 8051 汇编程序的时候会各种 <code>illegal operator</code> 比如想当然写出下面的代码就会编译报错：</p>
+<pre><code class="language-51asm">delay<span class="hljs-string">:</span>
+<span class="hljs-keyword">push </span><span class="hljs-built_in">r1</span> <span class="hljs-comment">; 把 r1 压入栈中
+</span><span class="hljs-keyword">mov </span><span class="hljs-built_in">r1</span>, <span class="hljs-built_in">r0</span>
+<span class="hljs-keyword">djnz </span><span class="hljs-built_in">r1</span>, $ <span class="hljs-comment">; $ 被编译成本条语句的开头地址
+</span><span class="hljs-keyword">pop </span><span class="hljs-built_in">r1</span> <span class="hljs-comment">; 恢复 r1
+</span>ret
+</code></pre>
+<p>这个函数因为修改了 r1，由于调用它的函数有可能正在使用这个寄存器，所以需要把它保存起来，使用完以后再恢复。不过直接这样写是不行的，查询一下指令集就会发现只有 <code>push direct</code> 并不存在 <code>push R1</code> ，同样也不存在 <code>pop R1</code> 与 <code>mov R1, R0</code>。我当时就挠头了，不能 <code>mov R1, R0</code> 我倒是可以理解，毕竟指令集规模有限，用下面的代码迂回替代即可：</p>
+<pre><code class="language-51asm"><span class="hljs-keyword">mov </span><span class="hljs-built_in">a</span>, <span class="hljs-built_in">r0</span>
+<span class="hljs-keyword">mov </span><span class="hljs-built_in">r1</span>, <span class="hljs-built_in">a</span>
+</code></pre>
+<p>但没有 <code>push R1</code> 只有 <code>push direct</code> 是实在让我感到困惑，毕竟 <code>push</code> 这条指令最大的用途就是保存寄存器，我实在是想不到什么时候需要直接 push 一个固定的内存单元。我一度觉得这是个很傻的设计，直到有一天我仔细琢磨了 8051 的存储模型。8051 有 256B 的运行时内存，而有趣的是它的 00H 到 07H 地址正好就是寄存器 R0 到 R7 的映射，也就是说如果我们想 <code>push r1</code> 那么就可以写成 <code>push 01H</code>。进一步讲，其他寄存器也都有相应的内存映射，不过它们都在 80H 以上的地址了，而且它们中的一些有单独的名字，比如寄存器 A 用作内存地址的时候就写为 ACC。这样的设计可以使 <code>push</code> 只占用一个操作符完成针对通用寄存器、特殊寄存器、内存地址的功能覆盖。</p>
+<blockquote>
+<p>默认情况下 R0 到 R7 是映射到 00H 到 07H 而 SP 也就是栈顶位置指向 07H。不过可以修改 PSW 寄存器的工作寄存器设置使 R0 到 R7 映射到其他位置，可选择从 08H, 10H 或 18H 作为映射起点。而修改工作寄存器以后需要在初始化单片机的时候把 SP 往后改到合适的位置。关于内存空间的更多信息可以参考 <a href="https://zhuanlan.zhihu.com/p/518143011">这份资料</a> 。</p>
+</blockquote>
+<p>然后我就发现指令集里还有其他很多类似的指令，都可以用这样的方法解释。比如，<code>djnz</code> 指令并不能直接 <code>djnz a, label</code> 但是可以用 <code>djnz acc, label</code> 迂回一下；再比如 <code>cjne a, r0, label</code> 也是不存在的指令但是可以使用 <code>cjne a, 00H, label</code> 替代。仔细观察整个指令集可以发现 opcode 有 8 位最多容纳 256 条指令，而目前看来指令集被塞得满满的。而所有 direct 参数在 opcode 以外需要额外一个字节来存，这样处理<strong>在代码里出现频率</strong>没那么高的指令就可以为更常用的指令让出 opcode 从而减小二进制程序的大小，毕竟 8051 的内置 ROM 只有 4KB 大小，按照指令普遍长度填满也就只能放两千多条指令，这点存储空间对于大点的工程来说简直就是洒洒水，还得上外置代码存储器。实际上，我检查这学期写过的实验中最大的一个编译产物达到了 1.48KB ，而里面主要也就是一个屏幕显示控制和一个 I2C 协议实现，所以功能再复杂一点填满 4KB 还是相当容易的。</p>
+<p>所以上面的代码正确写法应该为：</p>
+<pre><code class="language-51asm">delay<span class="hljs-string">:</span>
+<span class="hljs-keyword">push </span><span class="hljs-title">01H</span> <span class="hljs-comment">; 把 r1 压入栈中
+</span><span class="hljs-keyword">mov </span><span class="hljs-built_in">r1</span>, <span class="hljs-title">00H</span>
+<span class="hljs-keyword">djnz </span><span class="hljs-built_in">r1</span>, $ <span class="hljs-comment">; $ 被编译成本条语句的开头地址
+</span><span class="hljs-keyword">pop </span><span class="hljs-title">01H</span> <span class="hljs-comment">; 恢复 r1
+</span>ret
+</code></pre>
+<h2 id="一些建议">一些建议</h2>
+<p>同一个项目中保持一致的代码风格，不管是大小写风格，标签命名风格，或者是函数备份寄存器的压栈由调用方还是被调用方操作，进位符在操作前清空还是操作和清空……这些问题在很多语言中都有一定要求所以不成问题。但是像汇编这样不受重力束缚的语言咋写完全看你的心情，这时候就要保持克制而统一的编码风格。不然未来的你将遭到现在的你的背刺「这写的是啥啊，真是我写的么」。我这段时间最夸张的一次上午写的代码下午就看不懂了，那是一段控制显示屏的代码，里面充满了代表操作指令的 magic number 而且我当时没写注释。</p>
+<p>很多时候我们高估了自己对复杂的控制能力，也难以预估未来的复杂度增长。为了偷懒少写注释或者脑记函数调用间的复杂寄存器占用情况，这些短时间能被我掌控而杯忽略的复杂度常常在未来的某一天给我带来灾难，或是从零开始重读自己写的代码，或是调试了一下午发现 bug 只是因为寄存器冲突……尽管我们作为渺小的人类无法完全避开目光短浅，但我还是希望长鸣的警钟能让我犯的错少一点再少一点。</p>
+<p>除了寄存器以外还有一个例子是用户内存空间的管理，有时候想管理大块共享数据的时候跨函数的公共空间还是很有必要的。这时候就很建议实现一个简单的内存管理系统，按照现代计组与操作系统的习惯低地址放栈自下向上生长，高地址放堆自上而下生长，然后堆仅通过固定的一组内核函数操作，用户态函数仅通过间接寻址访问堆内存。而如果有外部 RAM 的情况下可以进一步让内部 RAM 仅作为栈，把堆放在外部 RAM 里。像这样通过借用现代思想为内存操作分层，能大大降低操作内存时的心智负担。</p>
+<p>另一个我想分享的小技巧是在编写通讯协议的时候，时序图是真的好用。上学期我初学时序图的时候觉得困惑，有了状态图还要时序图干嘛呢，多鸡肋啊！殊不知时序图除了表示状态变化以外最大的不同是上面可以标识变化与等待的现实时间。而每一步操作之间要等多长时间恰恰是很多通讯协议的关键所在，在很多没有同步时钟的单线通讯情况下尤为如此，所以写出程序发现元器件无响应不妨去仔细再读读时序图并算算各个操作之间的时间是否符合要求。另外，看多根线的密集操作时序图建议配把尺子「这根线上升沿的时候那根线应该是啥状态来着」。</p>
+<p>以及，最最最最最惨痛的教训：8051 的 P0 口和其他口不一样，置 1 的时候是高阻态而不是高电平，如果想当输出要接上拉电阻！！！</p>
+<h3 id="其他需要学的特色功能列表">其他需要学的特色功能列表</h3>
+<ul>
+<li>8051 内置的定时器/计数器</li>
+<li>中断机制（写出异步代码！）</li>
+<li>常见的通讯协议（各有优劣）<ul>
+<li>8051 内置的 UART 串口</li>
+<li>I2C 总线</li>
+<li>SPI 协议</li>
+<li>外部存储器扩展（可能不算通讯协议）</li>
+</ul>
+</li>
+<li>8051 指令集里平时在高层次没见过的指令（有时候能助你事半功倍）</li>
+<li><del>打好 CS 基础（计组，操作系统，软工，数电……十项全能！）</del>（这算什么特色啊！）</li>
+</ul>
+</body>
+</html>
