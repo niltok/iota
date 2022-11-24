@@ -8,6 +8,8 @@
 
 ## 2022
 
+[写给程序员的 8051 汇编指北🧭](8051ForCoder.html)
+
 [F-Bounded Polymorphism](FBoundedPoly.html)
 
 [电梯杀手问题](ElevatorKiller.html)
