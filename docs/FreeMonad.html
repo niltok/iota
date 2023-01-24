@@ -7,6 +7,21 @@
 <title >
 点菜数据类型 (Data types à la carte)</title>
 <link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><style >
+@font-face {
+    font-family: "subset body font";
+    src: url("body.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "subset code font";
+    src: url("code.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "subset emoji font";
+    src: url("emoji.woff2") format("woff2");
+}
+
 body {
     max-width: 35em;
     margin: auto;
@@ -15,7 +30,7 @@ body {
     margin-bottom: 10%;
     color: #0B0E26;
     background: #FAFAFC;
-    line-height: 2em;
+    line-height: 1.75em;
     text-rendering: optimizeLegibility;
     text-align: justify;
 }
@@ -23,7 +38,7 @@ body {
 html {
     scroll-behavior: smooth;
     font-size: calc(min(.35vw + 16px, 25px));
-    font-family: -apple-system, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
+    font-family: "subset body font", "Source Han Serif SC", "Noto Serif SC", "Songti SC", SimSun, "AR PL Sungti", "subset emoji font", serif;
 }
 
 h1 {
@@ -54,7 +69,7 @@ code,
 pre {
     font-size: 0.9rem;
     line-height: 1.8em;
-    font-family: "JetBrains Mono", "等距更纱黑体 SC", "Fira Code", Menlo, Monaco, source-code-pro, Courier New, Consolas, monospace;
+    font-family: "subset code font", "等距更纱黑体 SC", "JetBrains Mono", "Fira Code", Menlo, Monaco, source-code-pro, Courier New, Consolas, "subset emoji font", monospace;
     background: #FCF6FC;
     border-radius: 3px;
     padding-inline: 0.3em;
@@ -119,7 +134,7 @@ a {
 </head>
 <body >
 <p >
-<a href="https://iota.huohuo.moe">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<a href="index.html">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
 <h1 id="点菜数据类型-data-types-à-la-carte">点菜数据类型 (Data types à la carte)</h1>
 <blockquote>
 <p>本文是 <a href="https://www.cambridge.org/core/journals/journal-of-functional-programming/article/data-types-a-la-carte/14416CB20C4637164EA9F77097909409#">这篇论文</a> 的粗略科普，一些比较细节的地方还是建议去读原文了解。</p>

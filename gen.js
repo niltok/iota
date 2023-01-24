@@ -2,6 +2,7 @@ const marked = require('marked')
 const katex = require('katex')
 const fs = require('fs')
 const hljs = require('highlight.js')
+const subsetFont = require('subset-font')
 
 require("./marked-katex")(marked, katex)
 
@@ -42,8 +43,10 @@ const $$ = (label, attr = '') => s => '<' + label + ' ' + attr + '>\n' + s + '</
 const config = JSON.parse(fs.readFileSync('config.json').toString())
 const style = $$('style')(fs.readFileSync('style.css'))
 
+console.log('clean...')
+
 if (fs.existsSync("docs")) fs.readdirSync("docs").forEach(f => {
-    if (f.endsWith('.html')) fs.rmSync('docs/' + f)
+    if (f.endsWith('.html') || f.endsWith('.woff2')) fs.rmSync('docs/' + f)
 })
 else fs.mkdirSync("docs")
 
@@ -60,13 +63,17 @@ const katexcss = '<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/ka
 const head = conf => $$('head')(charset + compat + viewpoint + icon + title(conf) + katexcss + style)
 
 const github = '<a href="https://github.com/niltok">🔥GitHub🔥</a>'
-const home = '<a href="https://iota.huohuo.moe">🏠Homepage🏠</a>'
+const home = '<a href="index.html">🏠Homepage🏠</a>'
+
+let fullText = ''
+let codeText = ''
 
 const gen = conf => s => {
     return '<!DOCTYPE html>' + $$('html', 'lang="zh-CN" prefix="og: https://ogp.me/ns#"')
     (head(conf) + $$('body')($$('p')(home + ' | ' + github) +
         marked.marked(s, {
             highlight: (code, lang) => {
+                codeText += code
                 if (typeof lang == 'undefined' || lang == '')
                     return hljs.highlightAuto(code).value
                 else if (lang == 'nohighlight')
@@ -76,9 +83,25 @@ const gen = conf => s => {
         })))
 }
 
+console.log('convert markdown...')
+
 fs.readdirSync("src").forEach(f => {
     if (f.endsWith(".md")) {
         const content = fs.readFileSync("src/" + f).toString()
+        fullText += content
         fs.writeFileSync("docs/" + f.slice(0, f.length - 3) + ".html", gen(config[f])(content))
     }
+})
+
+console.log('convert font...')
+
+subsetFont(fs.readFileSync('body.woff2'), fullText, { targetFormat: 'woff2' }).then(f => {
+    fs.writeFileSync('docs/body.woff2', f)
+    return subsetFont(fs.readFileSync('code.ttf'), codeText, { targetFormat: 'woff2' })
+}).then(f => {
+    fs.writeFileSync('docs/code.woff2', f)
+    return subsetFont(fs.readFileSync('emoji.ttf'), fullText, { targetFormat: 'woff2' })
+}).then(f => {
+    fs.writeFileSync('docs/emoji.woff2', f)
+    console.log('done')
 })
