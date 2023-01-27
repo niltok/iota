@@ -65,7 +65,7 @@ const head = conf => $$('head')(charset + compat + viewpoint + icon + title(conf
 const github = '<a href="https://github.com/niltok">🔥GitHub🔥</a>'
 const home = '<a href="index.html">🏠Homepage🏠</a>'
 
-let fullText = ''
+let fullText = github + home
 let codeText = ''
 
 const gen = conf => s => {
