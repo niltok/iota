@@ -1,15 +1,18 @@
 @font-face {
     font-family: "subset body font";
+    font-display: swap;
     src: url("body.woff2") format("woff2");
 }
 
 @font-face {
     font-family: "subset code font";
+    font-display: swap;
     src: url("code.woff2") format("woff2");
 }
 
 @font-face {
     font-family: "subset emoji font";
+    font-display: swap;
     src: url("emoji.woff2") format("woff2");
 }
 
@@ -28,7 +31,6 @@ body {
 
 html {
     scroll-behavior: smooth;
-    font-display: swap;
     font-size: calc(min(.35vw + 16px, 25px));
     font-family: "subset body font", "Source Han Serif SC", "Noto Serif SC", "Songti SC", SimSun, "AR PL Sungti", "subset emoji font", serif;
 }

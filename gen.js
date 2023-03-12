@@ -41,7 +41,7 @@ hljs.registerLanguage('51asm', function(hljs) {
 const $$ = (label, attr = '') => s => '<' + label + ' ' + attr + '>\n' + s + '</' + label + '>\n'
 
 const config = JSON.parse(fs.readFileSync('config.json').toString())
-const style = $$('style')(fs.readFileSync('style.css'))
+// const style = $$('style')(fs.readFileSync('style.css'))
 
 console.log('clean...')
 
@@ -59,6 +59,7 @@ const title = conf => $$('title')(conf.title)
 const hljscss = '<link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/10.3.2/styles/a11y-light.min.css" rel="stylesheet">'
 const materialize = '<link href="https://cdn.bootcdn.net/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css" rel="stylesheet">'
 const katexcss = '<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet">'
+const style = '<link href="style.css" rel="stylesheet">'
 
 const head = conf => $$('head')(charset + compat + viewpoint + icon + title(conf) + katexcss + style)
 
