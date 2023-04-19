@@ -28,11 +28,12 @@ body {
     text-rendering: optimizeLegibility;
     text-align: justify;
     font-weight: 500;
+    word-break: break-word;
 }
 
 html {
     scroll-behavior: smooth;
-    font-size: calc(min(.35vw + 16px, 25px));
+    font-size: calc(max(1vw, 20px));
     font-family: "subset body font", "Source Han Serif SC", "Noto Serif SC", "Songti SC", SimSun, "AR PL Sungti", "subset emoji font", serif;
 }
 
