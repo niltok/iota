@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="zh-CN" prefix="og: https://ogp.me/ns#">
+<head >
+<meta charset="utf-8"/>
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<title >
+System S 笔记</title>
+<link href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.13.13/katex.min.css" rel="stylesheet"><link href="style.css" rel="stylesheet"></head>
+<body >
+<p >
+<a href="index.html">🏠Homepage🏠</a> | <a href="https://github.com/niltok">🔥GitHub🔥</a></p>
+<h1 id="system-s-笔记">System S 笔记</h1>
+<blockquote>
+<p>感谢 <a href="https://ice1000.org/">@千里冰封</a> 提供的 <a href="http://homepage.divms.uiowa.edu/~astump/papers/fu-stump-rta-tlca-14.pdf">原始论文</a></p>
+<p>这并不是一篇关于 System S 的教程，只是一些关于学到了啥，还有啥不懂的笔记</p>
+</blockquote>
+<p>简单来说 System S 就是在 System Fω 的基础上增加了一些 DT 性质和一个叫 Self Type 的巧妙东西用来构造数据结构，并且 System S 所加的特性都可以被擦除成 System Fω。</p>
+<h2 id="syntax">Syntax</h2>
+<p>有些地方为了方便输入用的是自己定的符号</p>
+<pre><code><span class="hljs-keyword">Term</span>    t ::= x | <span class="hljs-type">x</span> =&gt; t | <span class="hljs-type">t</span> t&#x27;
+
+<span class="hljs-keyword">Types</span>   T ::= X | <span class="hljs-type">{X</span> : k} -&gt; T | <span class="hljs-type">(x</span> : T) -&gt; T |
+              <span class="hljs-type">{x</span> : T} -&gt; T&#x27; | <span class="hljs-type">Self</span> x. T | <span class="hljs-type">T</span> t |
+              <span class="hljs-type">X</span> =&gt; T&#x27; | <span class="hljs-type">x</span> =&gt; T | <span class="hljs-type">T</span> T&#x27;
+
+Kinds   k ::= * | <span class="hljs-type">(x</span> : T) -&gt; k | <span class="hljs-type">(X</span> : k) -&gt; k&#x27;
+
+<span class="hljs-keyword">Context</span> Γ ::= · | <span class="hljs-type">Γ, x</span> : T | <span class="hljs-type">Γ, X</span> : k | <span class="hljs-type">Γ, μ
+
+Closure</span> μ ::= # | <span class="hljs-type">μ, (x</span> : T) :-&gt; t | <span class="hljs-type">μ, (X</span> : k) :-&gt; T
+</code></pre>
+<h2 id="pi-和--forall"><code>Pi</code> 和  <code>Forall</code></h2>
+<p>Types 中的 <code>{X : T} -&gt; T&#39;</code> 在原论文中是 <code>Forall X : T. T&#39;</code> 而 <code>(X : T) -&gt; T&#39;</code> 在原论文中是 <code>Pi X : T. T&#39;</code>，这名字就取得非常迷惑，按照常识来说 <code>Forall</code> 和 <code>Pi</code> 不应该是同一个东西么？而且这两个玩意有着一条可以说是一模一样的 Kinding rule ：</p>
+<pre><code><span class="hljs-section">Γ |- T : *    Γ, x : T |- T&#x27; : *
+--------------------------------</span>
+Γ |- (X : T) -&gt; T&#x27; : *
+
+<span class="hljs-section">Γ |- T : *    Γ, x : T |- T&#x27; : *
+--------------------------------</span>
+Γ |- {X : T} -&gt; T&#x27; : *
+</code></pre>
+<p>这更是让我迷惑了半天，同时我注意到论文中所有的 <code>Abstraction</code> 的类型都是 <code>Pi</code> 而 <code>Forall</code> 始终没出现：</p>
+<pre><code><span class="hljs-section">Γ |- x : T    Γ, x : T |- t : T&#x27;
+--------------------------------</span>
+Γ |- x =&gt; t : (x : T) -&gt; T&#x27;
+
+<span class="hljs-section">Γ |- x : T    Γ, x : T |- T&#x27; : k
+--------------------------------</span>
+Γ |- x =&gt; T&#x27; : (x : T) -&gt; k
+
+<span class="hljs-section">Γ |- X : k    Γ, X : k |- T : k&#x27;
+--------------------------------</span>
+Γ |- X =&gt; T : (X : k) -&gt; k&#x27;
+</code></pre>
+<p>这么看来 <code>Pi</code> 的作用和 System Fω 里面是一样的，非常符合常识。那么问题就出现在 <code>Forall</code> 上了，它是干啥子的呢？</p>
+<p><code>Forall</code> 的引入和消去规则在论文中是这样的：</p>
+<pre><code>Γ |- T : *    Γ, <span class="hljs-type">x</span> : <span class="hljs-type">T</span> |- t : <span class="hljs-type">T</span>&#x27;    x !<span class="hljs-keyword">in</span> FV(t)
+<span class="hljs-comment">----------------------------------------------- Ind x</span>
+Γ |- t : {<span class="hljs-type">x</span> : <span class="hljs-type">T</span>} -&gt; T&#x27;
+
+Γ |- t : {<span class="hljs-type">x</span> : <span class="hljs-type">T</span>} -&gt; T&#x27;    Γ |- t&#x27; : <span class="hljs-type">T</span>
+<span class="hljs-comment">------------------------------------- De x</span>
+Γ |- t : [<span class="hljs-type">t</span>&#x27;/x]T&#x27;
+</code></pre>
+<p>就是说这个 <code>t : {x : T} -&gt; T&#39;</code> 中的 <code>x</code> 根本不在 <code>t</code> 中出现，只会在 <code>T&#39;</code> 中出现，所以 <code>Forall</code> 中的 <code>x</code> 并不参与运算，只是个类型标注，可以在 tyck 以后被直接擦除。这也是 System S 类型擦除的关键，类型不依赖参与运算的变量。</p>
+<p>而且由消去规则可知 <code>{x : T} -&gt; T&#39;</code> 并不能手动指定参数，只能靠编译器的推导来得到参数，也就是一个类似于强制隐式参数的函数类型一样。</p>
+<p>至于 <code>{X : k} -&gt; T</code> 也是类似的，在原文是 <code>Forall X : k. T</code> ，是一个参数为类型的隐式参数函数类型，同样也是在 tyck 以后需要擦除的。</p>
+<h2 id="self-type">Self Type</h2>
+<p>Types 中有个 <code>Self x. T</code> ，也就是这张纸最奇妙的东西， Self Type 。按照命名可以得知这是个可以包含自己的类型，也就是 <code>x : T(x)</code> 。值的类型可以包含值本身，同时我们也可也从类型的定义中反过来得出值是啥，具体细节还是看后文的例子，这里先给出 rules 。</p>
+<pre><code>Γ, x :  |- 
+
+Γ |- t : [<span class="hljs-type">t</span>/x]T    Γ |- Self x. T : *
+<span class="hljs-comment">------------------------------------- Self Gen</span>
+Γ |- t : <span class="hljs-type">Self</span> x. T
+
+Γ |- t : <span class="hljs-type">Self</span> x. T
+<span class="hljs-comment">------------------ Self Inst</span>
+Γ |- t : [<span class="hljs-type">t</span>/x]T
+</code></pre>
+</body>
+</html>

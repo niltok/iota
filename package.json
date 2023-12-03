@@ -4,5 +4,8 @@
         "katex": "^0.15.1",
         "marked": "^4.0.3",
         "subset-font": "^2.0.0"
+    },
+    "scripts": {
+        "build": "node gen.js"
     }
 }

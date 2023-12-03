@@ -1,6 +1,6 @@
 # F-Bounded Polymorphism
 
-> 前言，在很久以前的某一天，我在魔法店水群，看到有人提到 F-Bounded Polymorphism，于是去搜索引擎找到了 [这篇文章](https://blog.lishunyang.com/2020/09/f-bounded-polymorphism.html) 。读完以后感觉挺有趣的就分享到了群里，不过群里人读完产生的疑惑似乎我也不知道怎么解答。于是这两天去读了 [原论文](http://staff.ustc.edu.cn/~xyfeng/teaching/FOPL/lectureNotes/CookFBound89.pdf)，结果发现那篇网文对 F-Bounded Polymorphism 的理解似乎有一些偏差……
+> 前言，在很久以前的某一天，我在魔法店水群，看到有人提到 F-Bounded Polymorphism，于是去搜索引擎找到了 [这篇文章](https://web.archive.org/web/20220810044654/https://blog.lishunyang.com/2020/09/f-bounded-polymorphism.html) 。读完以后感觉挺有趣的就分享到了群里，不过群里人读完产生的疑惑似乎我也不知道怎么解答。于是这两天去读了 [原论文](http://staff.ustc.edu.cn/~xyfeng/teaching/FOPL/lectureNotes/CookFBound89.pdf)，结果发现那篇网文对 F-Bounded Polymorphism 的理解似乎有一些偏差……
 
 ## 背景
 
